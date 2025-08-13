@@ -75,7 +75,7 @@ export default function ToolkitLayout({
                     <Bot className="h-6 w-6 text-primary" />
                     <span className="font-headline text-lg font-semibold">StudentKit</span>
                 </div>
-                <SidebarTrigger asChild>
+                <SidebarTrigger>
                     <Button variant="ghost" size="icon">
                         <Menu/>
                     </Button>
