@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Trash2, PlusCircle, CheckCircle } from "lucide-react";
+import { Trash2, PlusCircle, CheckCircle, Download } from "lucide-react";
 import useLocalStorage from "@/hooks/use-local-storage";
 
 interface Experience {
@@ -143,6 +143,34 @@ export default function ResumePage() {
     setSkills(prev => prev.filter(skill => skill.id !== id));
   };
 
+  const getFullResumeText = () => {
+    let text = ``;
+    text += `Name: ${personalInfo.fullName}\n`;
+    text += `Email: ${personalInfo.email}\n`;
+    text += `Phone: ${personalInfo.phone}\n`;
+    text += `LinkedIn: ${personalInfo.linkedin}\n\n`;
+
+    text += `## Summary\n${summary}\n\n`;
+
+    text += `## Work Experience\n`;
+    experiences.forEach(exp => {
+      text += `### ${exp.title} at ${exp.company}\n`;
+      text += `${exp.description}\n\n`;
+    });
+
+    text += `## Education\n`;
+    educations.forEach(edu => {
+      text += `### ${edu.degree}\n`;
+      text += `${edu.university}\n\n`;
+    });
+
+    text += `## Skills\n`;
+    text += skills.map(skill => skill.name).join(', ') + '\n';
+    return text;
+  }
+
+  const resumeText = getFullResumeText();
+
 
   return (
     <div className="space-y-8">
@@ -158,11 +186,17 @@ export default function ResumePage() {
             </TabsList>
             <TabsContent value="editor">
                 <Card>
-                    <CardHeader>
-                        <CardTitle>Resume Editor</CardTitle>
-                        <CardDescription>
-                            Fill in your details to build your resume. All your progress is saved automatically.
-                        </CardDescription>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle>Resume Editor</CardTitle>
+                            <CardDescription>
+                                Fill in your details to build your resume. All your progress is saved automatically.
+                            </CardDescription>
+                        </div>
+                        <Button variant="outline">
+                            <Download className="mr-2 h-4 w-4" />
+                            Download Resume
+                        </Button>
                     </CardHeader>
                     <CardContent className="space-y-8">
                        <div className="space-y-4">
@@ -320,7 +354,7 @@ export default function ResumePage() {
                 </Card>
             </TabsContent>
             <TabsContent value="critique">
-                <AiCritique />
+                <AiCritique resumeText={resumeText} />
             </TabsContent>
         </Tabs>
     </div>

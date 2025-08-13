@@ -11,17 +11,18 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Bot, Loader2, Sparkles } from 'lucide-react';
+import { Bot, Loader2, Sparkles, FileText } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const formSchema = z.object({
-  resumeText: z.string().min(200, {
-    message: "Resume text must be at least 200 characters.",
-  }),
   jobDescription: z.string().optional(),
 });
 
-export function AiCritique() {
+interface AiCritiqueProps {
+  resumeText: string;
+}
+
+export function AiCritique({ resumeText }: AiCritiqueProps) {
   const [isPending, startTransition] = useTransition();
   const [critique, setCritique] = useState<string | null>(null);
   const { toast } = useToast();
@@ -29,7 +30,6 @@ export function AiCritique() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      resumeText: "",
       jobDescription: "",
     },
   });
@@ -38,7 +38,11 @@ export function AiCritique() {
     setCritique(null);
     startTransition(async () => {
       try {
-        const result = await critiqueResume(values as CritiqueResumeInput);
+        const input: CritiqueResumeInput = {
+          resumeText: resumeText,
+          jobDescription: values.jobDescription,
+        };
+        const result = await critiqueResume(input);
         setCritique(result.critique);
       } catch (error) {
         console.error("Failed to get resume critique:", error);
@@ -58,27 +62,20 @@ export function AiCritique() {
           <CardHeader>
             <CardTitle>AI Resume Critique</CardTitle>
             <CardDescription>
-              Paste your resume and an optional job description to get AI-powered feedback.
+              Your resume from the editor is ready to be analyzed. You can also provide a job description for more tailored feedback.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="resumeText"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Your Resume Text</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Paste the full text of your resume here..."
-                      className="min-h-[250px] font-mono text-sm"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+             <div className="space-y-2">
+                <p className="text-sm font-medium">Your Current Resume</p>
+                <Alert variant="default">
+                    <FileText className="h-4 w-4" />
+                    <AlertTitle>Ready for Analysis</AlertTitle>
+                    <AlertDescription>
+                        The content from the "Resume Editor" tab will be used for the critique. Any changes you make there will be reflected here automatically.
+                    </AlertDescription>
+                </Alert>
+             </div>
             <FormField
               control={form.control}
               name="jobDescription"
@@ -101,7 +98,7 @@ export function AiCritique() {
             />
           </CardContent>
           <CardFooter>
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" disabled={isPending || !resumeText.trim()}>
               {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
