@@ -2,7 +2,7 @@
 
 import React, { useState, useTransition, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { getAuth, signOut, User as FirebaseUser, updatePassword, updateProfile, sendEmailVerification, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { getAuth, signOut, User as FirebaseUser, updatePassword, updateProfile, sendEmailVerification, EmailAuthProvider, reauthenticateWithCredential, deleteUser } from 'firebase/auth';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { app } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
@@ -12,10 +12,12 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, User, KeyRound, Loader2, Save, MailCheck, Camera } from 'lucide-react';
+import { LogOut, User, KeyRound, Loader2, Save, MailCheck, Camera, AlertTriangle, Trash2 } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+
 
 const passwordFormSchema = z.object({
   currentPassword: z.string().min(1, { message: "Current password is required." }),
@@ -30,6 +32,9 @@ const profileFormSchema = z.object({
     displayName: z.string().min(2, { message: "Display name must be at least 2 characters."}),
 });
 
+const deleteFormSchema = z.object({
+  password: z.string().min(1, { message: "Password is required to delete your account." }),
+});
 
 export default function ProfilePage() {
   const auth = getAuth(app);
@@ -41,7 +46,9 @@ export default function ProfilePage() {
   const [profilePending, startProfileTransition] = useTransition();
   const [verificationPending, startVerificationTransition] = useTransition();
   const [uploadPending, startUploadTransition] = useTransition();
+  const [deletePending, startDeleteTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
 
   const passwordForm = useForm<z.infer<typeof passwordFormSchema>>({
@@ -59,6 +66,13 @@ export default function ProfilePage() {
       displayName: user?.displayName || '',
     },
   });
+
+  const deleteForm = useForm<z.infer<typeof deleteFormSchema>>({
+    resolver: zodResolver(deleteFormSchema),
+    defaultValues: {
+        password: '',
+    }
+  })
 
   React.useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -178,7 +192,7 @@ export default function ProfilePage() {
             await uploadBytes(profilePicRef, file);
             const photoURL = await getDownloadURL(profilePicRef);
             await updateProfile(user, { photoURL });
-            setUser(auth.currentUser);
+            setUser(auth.currentUser); // This might not be synchronous, but we can optimistically update UI
             toast({
                 title: 'Profile Picture Updated',
                 description: 'Your new avatar has been saved.',
@@ -192,6 +206,35 @@ export default function ProfilePage() {
         }
     });
   };
+
+  const handleDeleteAccount = (values: z.infer<typeof deleteFormSchema>) => {
+    startDeleteTransition(async () => {
+        if (!user || !user.email) return;
+
+        try {
+            const credential = EmailAuthProvider.credential(user.email, values.password);
+            await reauthenticateWithCredential(user, credential);
+            await deleteUser(user);
+            toast({
+                title: 'Account Deleted',
+                description: 'Your account has been permanently deleted.',
+            });
+            router.push('/login');
+        } catch (error: any) {
+            let errorMessage = "An unknown error occurred.";
+             if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                errorMessage = 'The password you entered is incorrect.';
+            } else if (error.code === 'auth/too-many-requests') {
+                errorMessage = 'Too many attempts. Please try again later.';
+            }
+            toast({
+                variant: 'destructive',
+                title: 'Deletion Failed',
+                description: errorMessage,
+            });
+        }
+    })
+  }
 
   if (!user) {
     return null; // or a loading spinner
@@ -269,7 +312,7 @@ export default function ProfilePage() {
 
                 <div>
                 <h3 className="text-md font-semibold mb-2">Account Actions</h3>
-                <Button onClick={handleSignOut} variant="destructive">
+                <Button onClick={handleSignOut} variant="secondary">
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign Out
                 </Button>
@@ -337,7 +380,7 @@ export default function ProfilePage() {
                             name="newPassword"
                             render={({ field }) => (
                                 <FormItem>
-                                <FormLabel>New Password</FormLabel>
+                                <FormLabel>New Password</Label>
                                 <FormControl>
                                     <Input type="password" placeholder="••••••••" {...field} />
                                 </FormControl>
@@ -367,6 +410,56 @@ export default function ProfilePage() {
                         </CardFooter>
                     </form>
                 </Form>
+            </Card>
+            <Card className="border-destructive">
+                <CardHeader>
+                    <CardTitle className="text-destructive">Danger Zone</CardTitle>
+                    <CardDescription>These actions are permanent and cannot be undone.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                     <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                        <AlertDialogTrigger asChild>
+                             <Button variant="destructive">
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete Account
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                             <Form {...deleteForm}>
+                                <form onSubmit={deleteForm.handleSubmit(handleDeleteAccount)}>
+                                    <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently delete your account and remove your data from our servers. To confirm, please enter your password.
+                                    </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <div className="py-4">
+                                        <FormField
+                                            control={deleteForm.control}
+                                            name="password"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                <FormLabel>Password</FormLabel>
+                                                <FormControl>
+                                                    <Input type="password" placeholder="••••••••" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <Button type="submit" variant="destructive" disabled={deletePending}>
+                                             {deletePending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Trash2 className="mr-2 h-4 w-4" />}
+                                            Delete My Account
+                                        </Button>
+                                    </AlertDialogFooter>
+                                </form>
+                            </Form>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </CardContent>
             </Card>
         </div>
       </div>
