@@ -15,13 +15,11 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Bot, Code, FileText, FolderGit, LayoutDashboard, Menu } from 'lucide-react';
+import { Bot, Code, FileText, Menu } from 'lucide-react';
 import { AnimatedBackground } from '@/components/shared/animated-background';
 
 const navItems = [
   { href: '/resume', label: 'Resume Tool', icon: FileText },
-  { href: '/portfolio', label: 'Portfolio', icon: FolderGit },
-  { href: '/docs', label: 'Docs', icon: LayoutDashboard },
   { href: '/compiler', label: 'Compiler', icon: Code },
 ];
 
