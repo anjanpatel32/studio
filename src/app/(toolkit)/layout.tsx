@@ -19,7 +19,6 @@ import { Bot, Code, FileText, Menu } from 'lucide-react';
 import { AnimatedBackground } from '@/components/shared/animated-background';
 
 const navItems = [
-  { href: '/resume', label: 'Resume Tool', icon: FileText },
   { href: '/compiler', label: 'Compiler', icon: Code },
 ];
 
