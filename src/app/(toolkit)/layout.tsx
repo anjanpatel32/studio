@@ -42,8 +42,6 @@ const navItems = [
   { href: '/todo', label: 'To-Do List', icon: ListTodo },
   { href: '/notes', label: 'Notes', icon: Notebook },
   { href: '/pomodoro', label: 'Pomodoro', icon: Timer },
-  { href: '/resume', label: 'Resume', icon: FileText },
-  { href: '/mood-tracker', label: 'Mood Tracker', icon: Smile },
 ];
 
 function ToolkitLayout({

@@ -32,18 +32,6 @@ const tools = [
     href: '/pomodoro',
     icon: Timer,
   },
-   {
-    title: 'Resume Builder',
-    description: 'Build your resume and get AI-powered feedback.',
-    href: '/resume',
-    icon: FileText,
-  },
-  {
-    title: 'Mood Tracker',
-    description: 'Track your daily mood and gain self-awareness.',
-    href: '/mood-tracker',
-    icon: Smile,
-  },
 ];
 
 const otherLinks = [

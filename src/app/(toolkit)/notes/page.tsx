@@ -1,17 +1,18 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useTransition } from 'react';
 import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy, serverTimestamp } from 'firebase/firestore';
 import { getAuth, User } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Plus, Trash2, Edit, Save, XCircle, Notebook, Search, FilePlus } from 'lucide-react';
+import { Loader2, Plus, Trash2, Save, Notebook, Search, FilePlus } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 type Note = {
   id: string;
@@ -30,10 +31,12 @@ export default function NotesPage() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  
+  const [isSaving, startSaveTransition] = useTransition();
+
   const auth = getAuth(app);
   const db = getFirestore(app);
   const [user, setUser] = useState<User | null>(auth.currentUser);
+  const { toast } = useToast();
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -52,6 +55,7 @@ export default function NotesPage() {
         setLoading(false);
       }, (error) => {
         console.error("Error fetching notes: ", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch notes.'});
         setLoading(false);
       });
 
@@ -60,7 +64,7 @@ export default function NotesPage() {
       setNotes([]);
       setLoading(false);
     }
-  }, [user, db]);
+  }, [user, db, toast]);
 
   const filteredNotes = useMemo(() => {
     return notes.filter(note => note.title.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -81,37 +85,52 @@ export default function NotesPage() {
   };
 
   const handleSaveNote = async () => {
-    if (!user) return;
+    if (!user || (!isEditorDirty)) return;
+    
+    startSaveTransition(async () => {
+      const noteData = {
+        title,
+        content,
+        updatedAt: serverTimestamp(),
+        uid: user.uid,
+      };
 
-    const noteData = {
-      title,
-      content,
-      updatedAt: serverTimestamp(),
-      uid: user.uid,
-    };
-
-    if (isCreatingNew) {
-      const newNoteRef = await addDoc(collection(db, 'notes'), {
-        ...noteData,
-        createdAt: serverTimestamp(),
-      });
-      setIsCreatingNew(false);
-      const newNote = { ...noteData, id: newNoteRef.id, createdAt: new Date(), updatedAt: new Date() };
-      setSelectedNote(newNote as Note);
-    } else if (selectedNote) {
-      const noteRef = doc(db, 'notes', selectedNote.id);
-      await updateDoc(noteRef, noteData);
-    }
+      try {
+        if (isCreatingNew) {
+          const newNoteRef = await addDoc(collection(db, 'notes'), {
+            ...noteData,
+            createdAt: serverTimestamp(),
+          });
+          const newNote = { ...noteData, id: newNoteRef.id, createdAt: new Date(), updatedAt: new Date() };
+          setIsCreatingNew(false);
+          setSelectedNote(newNote as Note);
+          toast({ title: 'Note Created', description: `"${title}" has been saved.`});
+        } else if (selectedNote) {
+          const noteRef = doc(db, 'notes', selectedNote.id);
+          await updateDoc(noteRef, noteData);
+          toast({ title: 'Note Saved', description: `Changes to "${title}" have been saved.`});
+        }
+      } catch (error) {
+        console.error("Error saving note:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not save note.'});
+      }
+    });
   };
 
   const handleDeleteNote = async (id: string) => {
     if (!user) return;
     const noteRef = doc(db, 'notes', id);
-    await deleteDoc(noteRef);
-    if (selectedNote?.id === id) {
-      setSelectedNote(null);
-      setTitle('');
-      setContent('');
+    try {
+        await deleteDoc(noteRef);
+        toast({ title: 'Note Deleted' });
+        if (selectedNote?.id === id) {
+            setSelectedNote(null);
+            setTitle('');
+            setContent('');
+        }
+    } catch (error) {
+        console.error("Error deleting note:", error);
+        toast({ variant: 'destructive', title: 'Error', description: 'Could not delete note.'});
     }
   };
 
@@ -206,8 +225,9 @@ export default function NotesPage() {
                   placeholder="Note Title"
                 />
                  <div className="flex items-center gap-2">
-                    <Button onClick={handleSaveNote} disabled={!isEditorDirty}>
-                      <Save className="h-4 w-4 mr-2" /> Save
+                    <Button onClick={handleSaveNote} disabled={!isEditorDirty || isSaving}>
+                      {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                      {isSaving ? 'Saving...' : 'Save'}
                     </Button>
                      {selectedNote && (
                          <AlertDialog>
