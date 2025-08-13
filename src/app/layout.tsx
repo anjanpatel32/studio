@@ -26,6 +26,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
           strategy="lazyOnload"
         />
+        <Script src="https://sdk.cashfree.com/js/v3/cashfree.js" strategy="lazyOnload" />
       </head>
       <body className="font-body antialiased">
         <ThemeProvider
