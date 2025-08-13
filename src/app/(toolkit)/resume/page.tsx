@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import Image from 'next/image';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { AiCritique } from "./ai-critique";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Trash2, PlusCircle } from "lucide-react";
+import { Trash2, PlusCircle, CheckCircle } from "lucide-react";
 import useLocalStorage from "@/hooks/use-local-storage";
 
 interface Experience {
@@ -29,6 +30,50 @@ interface Skill {
     name: string;
 }
 
+const templateCategories = [
+    {
+        title: "Standard Resume Formats",
+        description: "These refer to the structure/layout type.",
+        templates: [
+            { name: "Chronological", hint: "classic resume", image: "https://placehold.co/400x560.png" },
+            { name: "Functional", hint: "skills resume", image: "https://placehold.co/400x560.png" },
+            { name: "Combination/Hybrid", hint: "modern resume", image: "https://placehold.co/400x560.png" },
+            { name: "Targeted", hint: "professional resume", image: "https://placehold.co/400x560.png" },
+        ]
+    },
+    {
+        title: "Microsoft Word / Canva Template Styles",
+        description: "Names you might see in template libraries.",
+        templates: [
+            { name: "Classic", hint: "simple resume", image: "https://placehold.co/400x560.png" },
+            { name: "Modern", hint: "creative resume", image: "https://placehold.co/400x560.png" },
+            { name: "Professional", hint: "business resume", image: "https://placehold.co/400x560.png" },
+            { name: "Creative", hint: "designer resume", image: "https://placehold.co/400x560.png" },
+            { name: "Minimalist", hint: "clean resume", image: "https://placehold.co/400x560.png" },
+            { name: "Executive", hint: "ceo resume", image: "https://placehold.co/400x560.png" },
+            { name: "Two-Column", hint: "column resume", image: "https://placehold.co/400x560.png" },
+            { name: "Infographic", hint: "visual resume", image: "https://placehold.co/400x560.png" },
+        ]
+    },
+    {
+        title: "Popular Template Names on Portals",
+        description: "Actual template names from platforms like Canva, MS Word, Zety, etc.",
+        templates: [
+            { name: "Cascade", hint: "modern resume", image: "https://placehold.co/400x560.png" },
+            { name: "Concept", hint: "creative resume", image: "https://placehold.co/400x560.png" },
+            { name: "Standout", hint: "bold resume", image: "https://placehold.co/400x560.png" },
+            { name: "Modern Professional", hint: "professional resume", image: "https://placehold.co/400x560.png" },
+            { name: "Coral", hint: "color resume", image: "https://placehold.co/400x560.png" },
+            { name: "Simple Chronological", hint: "classic resume", image: "https://placehold.co/400x560.png" },
+            { name: "Corporate Blue", hint: "business resume", image: "https://placehold.co/400x560.png" },
+            { name: "Elegant Minimalist", hint: "minimalist resume", image: "https://placehold.co/400x560.png" },
+            { name: "Tech Pro", hint: "developer resume", image: "https://placehold.co/400x560.png" },
+            { name: "Creative Designer", hint: "designer resume", image: "https://placehold.co/400x560.png" },
+        ]
+    }
+];
+
+
 export default function ResumePage() {
   const [personalInfo, setPersonalInfo] = useLocalStorage('resumePersonalInfo', {
     fullName: '',
@@ -47,6 +92,7 @@ export default function ResumePage() {
     { id: 1, name: 'React' }, {id: 2, name: 'Node.js'}
   ]);
   const [newSkill, setNewSkill] = useState('');
+  const [selectedTemplate, setSelectedTemplate] = useLocalStorage('selectedTemplate', 'Classic');
 
 
   const handlePersonalInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,8 +151,9 @@ export default function ResumePage() {
             <p className="text-muted-foreground mt-1">Build, refine, and get AI feedback on your resume.</p>
         </div>
         <Tabs defaultValue="editor" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 max-w-md">
+            <TabsList className="grid w-full grid-cols-3 max-w-lg">
                 <TabsTrigger value="editor">Resume Editor</TabsTrigger>
+                <TabsTrigger value="templates">Templates</TabsTrigger>
                 <TabsTrigger value="critique">AI Critique</TabsTrigger>
             </TabsList>
             <TabsContent value="editor">
@@ -222,10 +269,53 @@ export default function ResumePage() {
                                 </div>
                              </div>
                         </div>
-
-                         <CardDescription className="text-xs pt-4">
-                           Templates and export options coming soon.
+                    </CardContent>
+                </Card>
+            </TabsContent>
+            <TabsContent value="templates">
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Resume Templates</CardTitle>
+                        <CardDescription>
+                            Choose a template to apply to your resume. Export options coming soon.
                         </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-8">
+                       {templateCategories.map(category => (
+                            <div key={category.title}>
+                               <h3 className="text-xl font-medium font-headline mb-1">{category.title}</h3>
+                               <p className="text-muted-foreground mb-4">{category.description}</p>
+                               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                   {category.templates.map(template => (
+                                       <Card key={template.name} className="overflow-hidden">
+                                           <CardContent className="p-0">
+                                               <div className="aspect-[4/5] bg-muted">
+                                                  <Image 
+                                                    src={template.image} 
+                                                    alt={`${template.name} template`} 
+                                                    width={400} 
+                                                    height={560}
+                                                    data-ai-hint={template.hint}
+                                                    className="object-cover w-full h-full"
+                                                  />
+                                               </div>
+                                           </CardContent>
+                                           <CardFooter className="flex flex-col items-start p-4">
+                                                <h4 className="font-semibold">{template.name}</h4>
+                                                <Button 
+                                                    className="w-full mt-4" 
+                                                    onClick={() => setSelectedTemplate(template.name)}
+                                                    variant={selectedTemplate === template.name ? 'default' : 'secondary'}
+                                                >
+                                                   {selectedTemplate === template.name && <CheckCircle className="mr-2 h-4 w-4"/>}
+                                                    {selectedTemplate === template.name ? 'Selected' : 'Select'}
+                                                </Button>
+                                           </CardFooter>
+                                       </Card>
+                                   ))}
+                               </div>
+                           </div>
+                       ))}
                     </CardContent>
                 </Card>
             </TabsContent>
