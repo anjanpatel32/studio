@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   SidebarProvider,
   Sidebar,
@@ -15,33 +15,61 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Bot, Code, FileText, Menu, LogIn, User } from 'lucide-react';
+import { Bot, Code, FileText, Menu, LogOut, User, Settings } from 'lucide-react';
 import { AnimatedBackground } from '@/components/shared/animated-background';
-import { getAuth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, User as FirebaseUser, signOut } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import React from 'react';
+import withAuth from '@/components/shared/with-auth';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { useToast } from '@/hooks/use-toast';
 
 const navItems = [
   { href: '/compiler', label: 'Compiler', icon: Code },
+  { href: '/profile', label: 'Profile', icon: Settings },
 ];
 
-export default function ToolkitLayout({
+function ToolkitLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { toast } = useToast();
   const [user, setUser] = React.useState<FirebaseUser | null>(null);
-  const [loading, setLoading] = React.useState(true);
   const auth = getAuth(app);
   
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
-      setLoading(false);
     });
     return () => unsubscribe();
   }, [auth]);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      toast({
+        title: 'Signed Out',
+        description: 'You have successfully signed out.',
+      });
+      router.push('/login');
+    } catch (error) {
+       toast({
+        variant: 'destructive',
+        title: 'Sign Out Failed',
+        description: 'An error occurred while signing out.',
+      });
+    }
+  };
 
 
   const getLinkClassName = (href: string) => {
@@ -81,23 +109,30 @@ export default function ToolkitLayout({
             </SidebarMenu>
           </SidebarContent>
            <SidebarFooter className="p-2">
-            {!loading && (
-              user ? (
-                 <SidebarMenuItem>
-                   <div className={cn(getLinkClassName('#'), "cursor-default")}>
-                      <User className="h-4 w-4 shrink-0" />
-                      <span className="truncate">{user.email}</span>
-                   </div>
-                 </SidebarMenuItem>
-              ) : (
-                <SidebarMenuItem>
-                   <Link href="/login" className={getLinkClassName('/login')}>
-                    <LogIn className="h-4 w-4 shrink-0" />
-                    <span>Login</span>
-                  </Link>
-                </SidebarMenuItem>
-              )
-            )}
+              {user && (
+                 <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                       <Button variant="ghost" className="w-full justify-start gap-2 px-2 group-data-[collapsible=icon]:w-9 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+                          <User className="h-4 w-4 shrink-0" />
+                          <span className="truncate group-data-[collapsible=icon]:hidden">{user.email}</span>
+                       </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56 mb-2" side="top" align="start">
+                      <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                         <Link href="/profile">
+                          <Settings className="mr-2 h-4 w-4" />
+                          <span>Profile</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleSignOut}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Log out</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+              )}
            </SidebarFooter>
         </Sidebar>
         <SidebarInset className="bg-transparent md:bg-card/50 md:backdrop-blur-sm">
@@ -120,3 +155,5 @@ export default function ToolkitLayout({
     </>
   );
 }
+
+export default withAuth(ToolkitLayout);
