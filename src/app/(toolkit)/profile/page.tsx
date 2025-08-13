@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useTransition, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAuth, signOut, User as FirebaseUser, updatePassword, updateProfile, sendEmailVerification, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { app } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
@@ -10,8 +11,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { LogOut, User, KeyRound, Loader2, Save, MailCheck } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { LogOut, User, KeyRound, Loader2, Save, MailCheck, Camera } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -32,12 +33,15 @@ const profileFormSchema = z.object({
 
 export default function ProfilePage() {
   const auth = getAuth(app);
+  const storage = getStorage(app);
   const router = useRouter();
   const { toast } = useToast();
   const [user, setUser] = React.useState<FirebaseUser | null>(auth.currentUser);
   const [passwordPending, startPasswordTransition] = useTransition();
   const [profilePending, startProfileTransition] = useTransition();
   const [verificationPending, startVerificationTransition] = useTransition();
+  const [uploadPending, startUploadTransition] = useTransition();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
 
   const passwordForm = useForm<z.infer<typeof passwordFormSchema>>({
@@ -121,7 +125,6 @@ export default function ProfilePage() {
             await updateProfile(user, {
                 displayName: values.displayName
             });
-            // Manually update state because firebase listener might be slow
             setUser(auth.currentUser);
             toast({
                 title: 'Profile Updated',
@@ -155,6 +158,40 @@ export default function ProfilePage() {
       }
     })
   }
+  
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        toast({
+            variant: 'destructive',
+            title: 'File Too Large',
+            description: 'Please select an image smaller than 2MB.',
+        });
+        return;
+    }
+
+    startUploadTransition(async () => {
+        try {
+            const profilePicRef = storageRef(storage, `profile-pictures/${user.uid}`);
+            await uploadBytes(profilePicRef, file);
+            const photoURL = await getDownloadURL(profilePicRef);
+            await updateProfile(user, { photoURL });
+            setUser(auth.currentUser);
+            toast({
+                title: 'Profile Picture Updated',
+                description: 'Your new avatar has been saved.',
+            });
+        } catch (error) {
+             toast({
+                variant: 'destructive',
+                title: 'Upload Failed',
+                description: 'Could not upload your profile picture.',
+            });
+        }
+    });
+  };
 
   if (!user) {
     return null; // or a loading spinner
@@ -182,17 +219,31 @@ export default function ProfilePage() {
                 <CardDescription>Details about your account.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16">
-                    <AvatarFallback className="text-2xl font-bold">
-                    {getInitials(user.displayName, user.email || '')}
-                    </AvatarFallback>
-                </Avatar>
-                <div>
-                    <p className="text-lg font-semibold">{user.displayName || user.email}</p>
-                    {user.displayName && <p className="text-sm text-muted-foreground">{user.email}</p>}
-                    <p className="text-sm text-muted-foreground">User ID: {user.uid}</p>
-                </div>
+                <div className="flex flex-col items-center gap-4">
+                    <div className="relative">
+                        <Avatar className="h-24 w-24">
+                            <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User Avatar'} />
+                            <AvatarFallback className="text-4xl font-bold">
+                            {getInitials(user.displayName, user.email || '')}
+                            </AvatarFallback>
+                        </Avatar>
+                        {uploadPending && (
+                            <div className="absolute inset-0 bg-background/80 flex items-center justify-center rounded-full">
+                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            </div>
+                        )}
+                    </div>
+                    
+                    <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/png, image/jpeg, image/gif" className="hidden" />
+                    <Button onClick={() => fileInputRef.current?.click()} variant="outline" size="sm" disabled={uploadPending}>
+                        <Camera className="mr-2 h-4 w-4" />
+                        Upload Picture
+                    </Button>
+                    <div className="text-center">
+                        <p className="text-xl font-semibold">{user.displayName || 'No Name Set'}</p>
+                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                        <p className="text-xs text-muted-foreground mt-1">User ID: {user.uid}</p>
+                    </div>
                 </div>
                 
                  <div>
@@ -266,7 +317,7 @@ export default function ProfilePage() {
                         <CardHeader>
                         <CardTitle>Change Password</CardTitle>
                         <CardDescription>Update your account's password.</CardDescription>
-                        </CardHeader>
+                        </Header>
                         <CardContent className="space-y-4">
                             <FormField
                             control={passwordForm.control}
