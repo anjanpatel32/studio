@@ -5,11 +5,59 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import useLocalStorage from "@/hooks/use-local-storage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Loader2, Play, Terminal } from "lucide-react";
+import { Loader2, Play, Terminal, IndianRupee, AlertCircle } from "lucide-react";
 import { executeCode, ExecuteCodeInput } from '@/ai/flows/execute-code';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { cn } from '@/lib/utils';
+
+const helloWorldSnippets: { [key: string]: string } = {
+  c: '#include <stdio.h>\n\nint main() {\n   printf("Hello, World!");\n   return 0;\n}',
+  cpp: '#include <iostream>\n\nint main() {\n   std::cout << "Hello, World!";\n   return 0;\n}',
+  java: 'public class HelloWorld {\n   public static void main(String[] args) {\n      System.out.println("Hello, World!");\n   }\n}',
+  python: 'print("Hello, World!")',
+  csharp: 'using System;\n\nclass Program {\n   static void Main() {\n      Console.WriteLine("Hello, World!");\n   }\n}',
+  go: 'package main\n\nimport "fmt"\n\nfunc main() {\n   fmt.Println("Hello, World!")\n}',
+  rust: 'fn main() {\n   println!("Hello, World!");\n}',
+  swift: 'print("Hello, World!")',
+  kotlin: 'fun main() {\n   println("Hello, World!")\n}',
+  dart: 'void main() {\n  print(\'Hello, World!\');\n}',
+  julia: 'println("Hello, World!")',
+  perl: 'use strict;\nuse warnings;\n\nprint "Hello, World!\\n";',
+  pascal: 'program HelloWorld;\nbegin\n  writeln(\'Hello, World!\');\nend.',
+  fortran: 'program HelloWorld\n  print *, "Hello, World!"\nend program HelloWorld',
+  ada: 'with Ada.Text_IO;\nprocedure Hello is\nbegin\n  Ada.Text_IO.Put_Line("Hello, World!");\nend Hello;',
+  html: '<!DOCTYPE html>\n<html>\n<head>\n   <title>Page Title</title>\n</head>\n<body>\n\n   <h1>Hello, World!</h1>\n\n</body>\n</html>',
+  css: 'body {\n   background-color: lightblue;\n}\n\nh1 {\n   color: white;\n   text-align: center;\n}',
+  javascript: 'console.log("Hello, World!");',
+  typescript: 'let message: string = "Hello, World!";\nconsole.log(message);',
+  php: '<?php\n   echo "Hello, World!";\n?>',
+  ruby: 'puts "Hello, World!"',
+  elixir: 'IO.puts "Hello, World!"',
+  erlang: '-module(hello).\n-export([start/0]).\n\nstart() ->\n  io:fwrite("Hello, World!\\n").',
+  'asp.net': '// ASP.NET Core using C#\n// In a Controller action\npublic string Get() {\n    return "Hello, World!";\n}',
+  jsp: '<%@ page contentType="text/html; charset=UTF-8" %>\n<html>\n<body>\n  <h2><%= "Hello, World!" %></h2>\n</body>\n</html>',
+  r: 'print("Hello, World!")',
+  matlab: 'disp(\'Hello, World!\')',
+  sas: 'DATA _NULL_;\n   PUT "Hello, World!";\nRUN;',
+  stata: 'display "Hello, World!"',
+  scala: 'object HelloWorld extends App {\n  println("Hello, World!")\n}',
+  sql: 'SELECT \'Hello, World!\';',
+  'pl/sql': 'BEGIN\n  DBMS_OUTPUT.PUT_LINE(\'Hello, World!\');\nEND;',
+  tsql: 'SELECT \'Hello, World!\';',
+  nosql: '// MongoDB\ndb.greetings.insertOne({ message: "Hello, World!" });',
+  graphql: '{\n  hello\n}',
+  bash: 'echo "Hello, World!"',
+  powershell: 'Write-Host "Hello, World!"',
+  groovy: 'println "Hello, World!"',
+  haskell: 'main :: IO ()\nmain = putStrLn "Hello, World!"',
+  lisp: '(princ "Hello, World!")',
+  scheme: '(display "Hello, World!")',
+  ocaml: 'print_endline "Hello, World!"',
+  fsharp: 'printfn "Hello, World!"',
+  prolog: ':- initialization(main).\nmain :- write(\'Hello, World!\'), nl.',
+  gdscript: 'extends Node\n\nfunc _ready():\n    print("Hello, World!")',
+  lua: 'print("Hello, World!")'
+};
 
 const languageGroups = [
   {
@@ -120,19 +168,38 @@ const languageGroups = [
   }
 ];
 
+const FREE_TIER_LIMIT = 20;
+
 export default function CompilerPage() {
-  const [code, setCode] = useLocalStorage('compilerCode', 'function hello() {\n  console.log("Hello, Student!");\n}');
+  const [code, setCode] = useLocalStorage('compilerCode', 'console.log("Hello, World!");');
   const [language, setLanguage] = useLocalStorage('compilerLanguage', 'javascript');
+  const [compilationCount, setCompilationCount] = useLocalStorage('compilationCount', 0);
   const [isPending, startTransition] = useTransition();
   const [output, setOutput] = useState<string | null>(null);
   const { toast } = useToast();
 
+  const isFreemiumBlocked = compilationCount >= FREE_TIER_LIMIT;
+
+  const handleLanguageSelect = (langValue: string) => {
+    setLanguage(langValue);
+    setCode(helloWorldSnippets[langValue] || `// No "Hello World" example for ${langValue}`);
+  };
+
   const handleRunCode = () => {
+    if (isFreemiumBlocked) {
+       toast({
+          variant: "destructive",
+          title: "Free Limit Reached",
+          description: "You have used all your free compilations.",
+        });
+      return;
+    }
     setOutput(null);
     startTransition(async () => {
       try {
         const result = await executeCode({ code, language } as ExecuteCodeInput);
         setOutput(result.output);
+        setCompilationCount(prev => prev + 1);
       } catch (error) {
         console.error("Failed to execute code:", error);
         toast({
@@ -151,9 +218,12 @@ export default function CompilerPage() {
         <p className="text-muted-foreground mt-1">Write, run, and test your code in various languages. Your code is saved automatically.</p>
       </div>
 
-      <div>
-        <h2 className="text-xl font-headline font-semibold tracking-tight mb-4">Select Language</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Language Selection</CardTitle>
+          <CardDescription>Click a language to load a "Hello, World!" example.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {languageGroups.map(group => (
             <Card key={group.label} className="flex flex-col">
               <CardHeader>
@@ -167,7 +237,7 @@ export default function CompilerPage() {
                       key={lang.value}
                       variant={language === lang.value ? 'default' : 'secondary'}
                       size="sm"
-                      onClick={() => setLanguage(lang.value)}
+                      onClick={() => handleLanguageSelect(lang.value)}
                       className="text-xs h-auto py-1 px-2"
                     >
                       {lang.name}
@@ -177,8 +247,8 @@ export default function CompilerPage() {
               </CardContent>
             </Card>
           ))}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
       
       <Card>
         <CardHeader>
@@ -195,22 +265,43 @@ export default function CompilerPage() {
             onChange={(e) => setCode(e.target.value)}
           />
         </CardContent>
-        <CardFooter>
-          <Button onClick={handleRunCode} disabled={isPending}>
-            {isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Executing...
-              </>
-            ) : (
-              <>
-                <Play className="mr-2 h-4 w-4" />
-                Run Code
-              </>
+        <CardFooter className="flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex gap-4">
+            <Button onClick={handleRunCode} disabled={isPending || isFreemiumBlocked}>
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Executing...
+                </>
+              ) : (
+                <>
+                  <Play className="mr-2 h-4 w-4" />
+                  Run Code
+                </>
+              )}
+            </Button>
+            {isFreemiumBlocked && (
+              <Button>
+                <IndianRupee className="mr-2 h-4 w-4" />
+                Pay ₹40 for Unlimited Access
+              </Button>
             )}
-          </Button>
+          </div>
+          <p className="text-sm text-muted-foreground">
+              {FREE_TIER_LIMIT - compilationCount} free compilations remaining.
+          </p>
         </CardFooter>
       </Card>
+
+      {isFreemiumBlocked && (
+         <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Free Tier Limit Reached</AlertTitle>
+            <AlertDescription>
+                You have used all your {FREE_TIER_LIMIT} free code executions. Please pay to continue using the compiler.
+            </AlertDescription>
+        </Alert>
+      )}
 
       {(isPending || output !== null) && (
         <Card>
