@@ -5,7 +5,7 @@ import { getAuth } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Code, Settings, Timer, Notebook } from 'lucide-react';
+import { ArrowRight, Code, Settings, Timer, Notebook, IndianRupee } from 'lucide-react';
 
 const tools = [
   {
@@ -34,6 +34,12 @@ const otherLinks = [
         description: 'Manage your account settings and profile information.',
         href: '/profile',
         icon: Settings,
+    },
+    {
+        title: 'Pricing',
+        description: 'View our pricing plans and upgrade your account.',
+        href: '/pricing',
+        icon: IndianRupee,
     }
 ]
 
@@ -84,8 +90,8 @@ export default function DashboardPage() {
 
          <Card>
           <CardHeader>
-            <CardTitle>Account</CardTitle>
-            <CardDescription>Manage your profile and settings.</CardDescription>
+            <CardTitle>Account & Billing</CardTitle>
+            <CardDescription>Manage your profile and subscription.</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {otherLinks.map((link) => (

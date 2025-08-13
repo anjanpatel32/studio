@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Bot, Code, Menu, LogOut, User, Settings, LayoutDashboard, Timer, Notebook, Sun, Moon } from 'lucide-react';
+import { Bot, Code, Menu, LogOut, User, Settings, LayoutDashboard, Timer, Notebook, Sun, Moon, IndianRupee } from 'lucide-react';
 import { AnimatedBackground } from '@/components/shared/animated-background';
 import { getAuth, onAuthStateChanged, User as FirebaseUser, signOut } from 'firebase/auth';
 import { app } from '@/lib/firebase';
@@ -41,6 +41,7 @@ const navItems = [
   { href: '/compiler', label: 'Compiler', icon: Code },
   { href: '/notes', label: 'Notes', icon: Notebook },
   { href: '/pomodoro', label: 'Pomodoro', icon: Timer },
+  { href: '/pricing', label: 'Pricing', icon: IndianRupee },
 ];
 
 function ToolkitLayout({

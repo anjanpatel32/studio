@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import Link from 'next/link';
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import useLocalStorage from "@/hooks/use-local-storage";
@@ -313,9 +314,11 @@ export default function CompilerPage() {
               )}
             </Button>
             {isFreemiumBlocked && (
-              <Button>
-                <IndianRupee className="mr-2 h-4 w-4" />
-                Pay for Unlimited Access
+              <Button asChild>
+                <Link href="/pricing">
+                  <IndianRupee className="mr-2 h-4 w-4" />
+                  Upgrade to Pro
+                </Link>
               </Button>
             )}
           </div>
@@ -330,7 +333,7 @@ export default function CompilerPage() {
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Free Tier Limit Reached</AlertTitle>
             <AlertDescription>
-                You have used all your {FREE_TIER_LIMIT} free code executions. Please pay to continue using the compiler.
+                You have used all your {FREE_TIER_LIMIT} free code executions. Please <Link href="/pricing" className="underline font-bold">Upgrade to Pro</Link> to continue using the compiler.
             </AlertDescription>
         </Alert>
       )}
@@ -419,12 +422,14 @@ export default function CompilerPage() {
                 onClick={() => {
                   if (debugResult) {
                     setCode(debugResult.fixedCode);
+                    setError(null);
+                    setOutput(null);
                   }
                   setIsDebugDialogOpen(false);
                 }}
                 disabled={!debugResult}
               >
-                Accept Fix
+                Accept Fix & Rerun
               </Button>
           </DialogFooter>
         </DialogContent>
