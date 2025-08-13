@@ -43,7 +43,7 @@ export default function LoginPage() {
           title: 'Signed In',
           description: 'You have successfully signed in.',
         });
-        router.push('/compiler'); 
+        router.push('/dashboard'); 
       } catch (error: any) {
         let errorMessage = "An unknown error occurred.";
         if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {

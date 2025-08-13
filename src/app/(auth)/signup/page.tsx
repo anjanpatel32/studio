@@ -49,7 +49,7 @@ export default function SignupPage() {
           title: 'Account Created',
           description: "We've sent a verification link to your email address.",
         });
-        router.push('/compiler');
+        router.push('/dashboard');
       } catch (error: any) {
         let errorMessage = "An unknown error occurred.";
         if (error.code === 'auth/email-already-in-use') {

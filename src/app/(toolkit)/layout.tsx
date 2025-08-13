@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Bot, Code, FileText, Menu, LogOut, User, Settings } from 'lucide-react';
+import { Bot, Code, FileText, Menu, LogOut, User, Settings, LayoutDashboard, ListTodo } from 'lucide-react';
 import { AnimatedBackground } from '@/components/shared/animated-background';
 import { getAuth, onAuthStateChanged, User as FirebaseUser, signOut } from 'firebase/auth';
 import { app } from '@/lib/firebase';
@@ -32,8 +32,9 @@ import {
 import { useToast } from '@/hooks/use-toast';
 
 const navItems = [
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/compiler', label: 'Compiler', icon: Code },
-  { href: '/profile', label: 'Profile', icon: Settings },
+  { href: '/todo', label: 'To-Do List', icon: ListTodo },
 ];
 
 function ToolkitLayout({
@@ -73,7 +74,7 @@ function ToolkitLayout({
 
 
   const getLinkClassName = (href: string) => {
-    const isActive = pathname === href;
+    const isActive = pathname.startsWith(href);
     return cn(
       "flex h-9 w-full items-center justify-start gap-2 rounded-md px-2 text-sm outline-none ring-sidebar-ring transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 group-data-[collapsible=icon]:h-9 group-data-[collapsible=icon]:w-9 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 [&>span]:group-data-[collapsible=icon]:hidden",
       isActive && "bg-sidebar-accent text-sidebar-accent-foreground font-medium"

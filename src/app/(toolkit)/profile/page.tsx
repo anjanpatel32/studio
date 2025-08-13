@@ -9,15 +9,64 @@ import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import ReactCrop, { type Crop, PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop'
+import 'react-image-crop/dist/ReactCrop.css'
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, User, KeyRound, Loader2, Save, MailCheck, Camera, AlertTriangle, Trash2 } from 'lucide-react';
+import { LogOut, User, KeyRound, Loader2, Save, MailCheck, Camera, AlertTriangle, Trash2, Check, X } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
+function getCroppedImg(image: HTMLImageElement, crop: PixelCrop, fileName: string): Promise<File> {
+  const canvas = document.createElement('canvas');
+  const scaleX = image.naturalWidth / image.width;
+  const scaleY = image.naturalHeight / image.height;
+  canvas.width = crop.width;
+  canvas.height = crop.height;
+  const ctx = canvas.getContext('2d');
+
+  if (!ctx) {
+    return Promise.reject(new Error('Failed to get canvas context'));
+  }
+
+  const pixelRatio = window.devicePixelRatio;
+  canvas.width = crop.width * pixelRatio;
+  canvas.height = crop.height * pixelRatio;
+  ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+  ctx.imageSmoothingQuality = 'high';
+
+  ctx.drawImage(
+    image,
+    crop.x * scaleX,
+    crop.y * scaleY,
+    crop.width * scaleX,
+    crop.height * scaleY,
+    0,
+    0,
+    crop.width,
+    crop.height
+  );
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error('Canvas is empty'));
+          return;
+        }
+        const file = new File([blob], fileName, { type: 'image/jpeg' });
+        resolve(file);
+      },
+      'image/jpeg',
+      0.95
+    );
+  });
+}
 
 const passwordFormSchema = z.object({
   currentPassword: z.string().min(1, { message: "Current password is required." }),
@@ -47,8 +96,16 @@ export default function ProfilePage() {
   const [verificationPending, startVerificationTransition] = useTransition();
   const [uploadPending, startUploadTransition] = useTransition();
   const [deletePending, startDeleteTransition] = useTransition();
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  
+  const [isCropDialogOpen, setIsCropDialogOpen] = useState(false);
+  const [imgSrc, setImgSrc] = useState('');
+  const [crop, setCrop] = useState<Crop>();
+  const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
+  const [originalFile, setOriginalFile] = useState<File | null>(null);
 
 
   const passwordForm = useForm<z.infer<typeof passwordFormSchema>>({
@@ -173,11 +230,10 @@ export default function ProfilePage() {
     })
   }
   
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !user) return;
-
-    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+  const onSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+       if (file.size > 2 * 1024 * 1024) { // 2MB limit
         toast({
             variant: 'destructive',
             title: 'File Too Large',
@@ -185,25 +241,59 @@ export default function ProfilePage() {
         });
         return;
     }
+      setOriginalFile(file);
+      setCrop(undefined) // Makes crop preview update between images.
+      const reader = new FileReader();
+      reader.addEventListener('load', () => setImgSrc(reader.result?.toString() || ''));
+      reader.readAsDataURL(file);
+      setIsCropDialogOpen(true);
+    }
+  };
 
+  const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const { width, height } = e.currentTarget;
+    setCrop(centerCrop(
+      makeAspectCrop({ unit: '%', width: 90 }, 1, width, height),
+      width,
+      height
+    ));
+  };
+
+  const handleCrop = async () => {
+    if (!completedCrop || !imgRef.current || !originalFile) {
+      return;
+    }
+
+    setIsCropDialogOpen(false);
     startUploadTransition(async () => {
-        try {
-            const profilePicRef = storageRef(storage, `profile-pictures/${user.uid}`);
-            await uploadBytes(profilePicRef, file);
-            const photoURL = await getDownloadURL(profilePicRef);
-            await updateProfile(user, { photoURL });
-            setUser(auth.currentUser); // This might not be synchronous, but we can optimistically update UI
-            toast({
-                title: 'Profile Picture Updated',
-                description: 'Your new avatar has been saved.',
-            });
-        } catch (error) {
-             toast({
-                variant: 'destructive',
-                title: 'Upload Failed',
-                description: 'Could not upload your profile picture.',
-            });
+      try {
+        const croppedImageFile = await getCroppedImg(imgRef.current!, completedCrop, originalFile.name);
+        if (!user) return;
+        
+        const profilePicRef = storageRef(storage, `profile-pictures/${user.uid}`);
+        await uploadBytes(profilePicRef, croppedImageFile);
+        const photoURL = await getDownloadURL(profilePicRef);
+        
+        await updateProfile(user, { photoURL });
+        setUser(auth.currentUser);
+        toast({
+            title: 'Profile Picture Updated',
+            description: 'Your new avatar has been saved.',
+        });
+
+      } catch (error) {
+         toast({
+            variant: 'destructive',
+            title: 'Upload Failed',
+            description: 'Could not upload your profile picture.',
+        });
+      } finally {
+        setImgSrc('');
+        setOriginalFile(null);
+        if(fileInputRef.current) {
+          fileInputRef.current.value = '';
         }
+      }
     });
   };
 
@@ -277,7 +367,7 @@ export default function ProfilePage() {
                         )}
                     </div>
                     
-                    <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/png, image/jpeg, image/gif" className="hidden" />
+                    <input type="file" ref={fileInputRef} onChange={onSelectFile} accept="image/png, image/jpeg, image/gif" className="hidden" />
                     <Button onClick={() => fileInputRef.current?.click()} variant="outline" size="sm" disabled={uploadPending}>
                         <Camera className="mr-2 h-4 w-4" />
                         Upload Picture
@@ -380,7 +470,7 @@ export default function ProfilePage() {
                             name="newPassword"
                             render={({ field }) => (
                                 <FormItem>
-                                <FormLabel>New Password</Label>
+                                <FormLabel>New Password</FormLabel>
                                 <FormControl>
                                     <Input type="password" placeholder="••••••••" {...field} />
                                 </FormControl>
@@ -463,6 +553,42 @@ export default function ProfilePage() {
             </Card>
         </div>
       </div>
+       <Dialog open={isCropDialogOpen} onOpenChange={setIsCropDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Crop your new profile picture</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+           {imgSrc && (
+            <ReactCrop
+              crop={crop}
+              onChange={(_, percentCrop) => setCrop(percentCrop)}
+              onComplete={(c) => setCompletedCrop(c)}
+              aspect={1}
+              minWidth={100}
+            >
+              <img
+                ref={imgRef}
+                alt="Crop me"
+                src={imgSrc}
+                onLoad={onImageLoad}
+                className="max-h-[70vh] w-auto"
+              />
+            </ReactCrop>
+           )}
+          </div>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setIsCropDialogOpen(false)}>
+                <X className="mr-2 h-4 w-4"/>
+                Cancel
+            </Button>
+            <Button onClick={handleCrop} disabled={uploadPending}>
+                {uploadPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Check className="mr-2 h-4 w-4"/>}
+                Crop & Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
