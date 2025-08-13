@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import useLocalStorage from "@/hooks/use-local-storage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -10,6 +10,79 @@ import { Loader2, Play, Terminal } from "lucide-react";
 import { executeCode, ExecuteCodeInput } from '@/ai/flows/execute-code';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
+const languageGroups = [
+  {
+    label: "General-Purpose",
+    languages: [
+      { value: "c", name: "C" },
+      { value: "cpp", name: "C++" },
+      { value: "java", name: "Java" },
+      { value: "python", name: "Python" },
+      { value: "csharp", name: "C#" },
+      { value: "go", name: "Go (Golang)" },
+      { value: "swift", name: "Swift" },
+      { value: "kotlin", name: "Kotlin" },
+      { value: "dart", name: "Dart" },
+      { value: "rust", name: "Rust" },
+      { value: "ruby", name: "Ruby" },
+      { value: "scala", name: "Scala" },
+      { value: "perl", name: "Perl" },
+      { value: "lua", name: "Lua" },
+      { value: "objective-c", name: "Objective-C" },
+      { value: "groovy", name: "Groovy" },
+      { value: "pascal", name: "Pascal" },
+      { value: "fortran", name: "Fortran" },
+      { value: "ada", name: "Ada" },
+    ]
+  },
+  {
+    label: "Web Development",
+    languages: [
+      { value: "html", name: "HTML" },
+      { value: "css", name: "CSS" },
+      { value: "javascript", name: "JavaScript" },
+      { value: "typescript", name: "TypeScript" },
+      { value: "php", name: "PHP" },
+      { value: "sql", name: "SQL" },
+      { value: "nosql", name: "NoSQL" },
+      { value: "asp.net", name: "ASP.NET" },
+      { value: "jsp", name: "JSP" },
+    ]
+  },
+  {
+    label: "Data Science & Analytics",
+    languages: [
+      { value: "r", name: "R" },
+      { value: "matlab", name: "MATLAB" },
+      { value: "julia", name: "Julia" },
+      { value: "sas", name: "SAS" },
+      { value: "stata", name: "Stata" },
+    ]
+  },
+  {
+    label: "Scripting & Automation",
+    languages: [
+      { value: "bash", name: "Bash / Shell" },
+      { value: "powershell", name: "PowerShell" },
+      { value: "awk", name: "AWK" },
+      { value: "tcl", name: "TCL" },
+    ]
+  },
+  {
+    label: "Functional & Academic",
+    languages: [
+      { value: "haskell", name: "Haskell" },
+      { value: "lisp", name: "Lisp" },
+      { value: "scheme", name: "Scheme" },
+      { value: "prolog", name: "Prolog" },
+      { value: "ocaml", name: "OCaml" },
+      { value: "fsharp", name: "F#" },
+      { value: "erlang", name: "Erlang" },
+      { value: "elixir", name: "Elixir" },
+    ]
+  }
+];
 
 export default function CompilerPage() {
   const [code, setCode] = useLocalStorage('compilerCode', 'function hello() {\n  console.log("Hello, Student!");\n}');
@@ -55,10 +128,14 @@ export default function CompilerPage() {
                   <SelectValue placeholder="Select language" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="javascript">JavaScript</SelectItem>
-                  <SelectItem value="python">Python</SelectItem>
-                  <SelectItem value="java">Java</SelectItem>
-                  <SelectItem value="csharp">C#</SelectItem>
+                  {languageGroups.map(group => (
+                    <SelectGroup key={group.label}>
+                      <SelectLabel>{group.label}</SelectLabel>
+                      {group.languages.map(lang => (
+                        <SelectItem key={lang.value} value={lang.value}>{lang.name}</SelectItem>
+                      ))}
+                    </SelectGroup>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
