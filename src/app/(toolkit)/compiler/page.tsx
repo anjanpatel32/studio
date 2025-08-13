@@ -315,12 +315,12 @@ export default function CompilerPage() {
             {isFreemiumBlocked && (
               <Button>
                 <IndianRupee className="mr-2 h-4 w-4" />
-                Pay ₹40 for Unlimited Access
+                Pay for Unlimited Access
               </Button>
             )}
           </div>
           <p className="text-sm text-muted-foreground">
-              {FREE_TIER_LIMIT - compilationCount} free compilations remaining.
+              {Math.max(0, FREE_TIER_LIMIT - compilationCount)} free compilations remaining.
           </p>
         </CardFooter>
       </Card>
