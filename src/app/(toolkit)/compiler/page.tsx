@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from 'react';
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import useLocalStorage from "@/hooks/use-local-storage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -10,10 +9,12 @@ import { Loader2, Play, Terminal } from "lucide-react";
 import { executeCode, ExecuteCodeInput } from '@/ai/flows/execute-code';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { cn } from '@/lib/utils';
 
 const languageGroups = [
   {
     label: "General-Purpose Programming Languages",
+    description: "Used across many domains — software, apps, games, etc.",
     languages: [
       { value: "c", name: "C" },
       { value: "cpp", name: "C++" },
@@ -34,6 +35,7 @@ const languageGroups = [
   },
   {
     label: "Web Development Languages",
+    description: "Frontend, backend, and full-stack",
     languages: [
       { value: "html", name: "HTML" },
       { value: "css", name: "CSS" },
@@ -49,6 +51,7 @@ const languageGroups = [
   },
   {
     label: "Data Science, AI & Analytics",
+    description: "Data processing, AI models, statistics",
     languages: [
       { value: "python", name: "Python (NumPy, Pandas, TensorFlow)" },
       { value: "r", name: "R" },
@@ -61,6 +64,7 @@ const languageGroups = [
   },
   {
     label: "Database & Query Languages",
+    description: "Used to interact with databases",
     languages: [
       { value: "sql", name: "SQL" },
       { value: "pl/sql", name: "PL/SQL (Oracle)" },
@@ -71,6 +75,7 @@ const languageGroups = [
   },
   {
     label: "Mobile App Development Languages",
+    description: "Native & cross-platform",
     languages: [
       { value: "swift", name: "Swift (iOS/macOS)" },
       { value: "kotlin", name: "Kotlin (Android)" },
@@ -81,6 +86,7 @@ const languageGroups = [
   },
   {
     label: "Scripting & Automation Languages",
+    description: "System scripts, automation, DevOps",
     languages: [
       { value: "bash", name: "Bash / Shell Script" },
       { value: "powershell", name: "PowerShell" },
@@ -91,6 +97,7 @@ const languageGroups = [
   },
   {
     label: "Functional & Academic Languages",
+    description: "Used for research, math-heavy projects, or functional programming",
     languages: [
       { value: "haskell", name: "Haskell" },
       { value: "lisp", name: "Lisp" },
@@ -102,6 +109,7 @@ const languageGroups = [
   },
   {
     label: "Game Development Languages",
+    description: "Game engines & graphics",
     languages: [
       { value: "cpp", name: "C++ (Unreal Engine, game engines)" },
       { value: "csharp", name: "C# (Unity)" },
@@ -143,31 +151,41 @@ export default function CompilerPage() {
         <p className="text-muted-foreground mt-1">Write, run, and test your code in various languages. Your code is saved automatically.</p>
       </div>
 
+      <div>
+        <h2 className="text-xl font-headline font-semibold tracking-tight mb-4">Select Language</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {languageGroups.map(group => (
+            <Card key={group.label} className="flex flex-col">
+              <CardHeader>
+                <CardTitle className="text-lg font-headline">{group.label}</CardTitle>
+                <CardDescription>{group.description}</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-grow">
+                <div className="flex flex-wrap gap-2">
+                  {group.languages.map(lang => (
+                    <Button
+                      key={lang.value}
+                      variant={language === lang.value ? 'default' : 'secondary'}
+                      size="sm"
+                      onClick={() => setLanguage(lang.value)}
+                      className="text-xs h-auto py-1 px-2"
+                    >
+                      {lang.name}
+                    </Button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+      
       <Card>
         <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <CardTitle>Code Editor</CardTitle>
-              <CardDescription>Select a language and start coding.</CardDescription>
-            </div>
-            <div className="w-full sm:w-[200px]">
-              <Select value={language} onValueChange={setLanguage}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select language" />
-                </SelectTrigger>
-                <SelectContent>
-                  {languageGroups.map(group => (
-                    <SelectGroup key={group.label}>
-                      <SelectLabel>{group.label}</SelectLabel>
-                      {group.languages.map(lang => (
-                        <SelectItem key={lang.value} value={lang.value}>{lang.name}</SelectItem>
-                      ))}
-                    </SelectGroup>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <CardTitle>Code Editor</CardTitle>
+          <CardDescription>
+              Selected language: <span className="font-semibold text-primary">{languageGroups.flatMap(g => g.languages).find(l => l.value === language)?.name || language}</span>
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Textarea
