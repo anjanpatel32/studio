@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useTransition, useRef } from 'react';
@@ -129,7 +130,7 @@ export default function ProfilePage() {
     defaultValues: {
         password: '',
     }
-  })
+  });
 
   React.useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -187,7 +188,7 @@ export default function ProfilePage() {
             });
         }
     });
-  }
+  };
 
   const handleUpdateProfile = (values: z.infer<typeof profileFormSchema>) => {
     startProfileTransition(async () => {
@@ -208,8 +209,8 @@ export default function ProfilePage() {
                 description: 'Could not update your profile.',
             });
         }
-    })
-  }
+    });
+  };
 
   const handleResendVerification = () => {
     startVerificationTransition(async () => {
@@ -219,16 +220,16 @@ export default function ProfilePage() {
         toast({
           title: 'Verification Email Sent',
           description: 'Please check your inbox to verify your email address.',
-        })
+        });
       } catch (error) {
         toast({
           variant: 'destructive',
           title: 'Request Failed',
           description: 'Could not send verification email. Please try again later.',
-        })
+        });
       }
-    })
-  }
+    });
+  };
   
   const onSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -242,7 +243,7 @@ export default function ProfilePage() {
         return;
     }
       setOriginalFile(file);
-      setCrop(undefined) // Makes crop preview update between images.
+      setCrop(undefined); // Makes crop preview update between images.
       const reader = new FileReader();
       reader.addEventListener('load', () => setImgSrc(reader.result?.toString() || ''));
       reader.readAsDataURL(file);
@@ -323,8 +324,8 @@ export default function ProfilePage() {
                 description: errorMessage,
             });
         }
-    })
-  }
+    });
+  };
 
   if (!user) {
     return null; // or a loading spinner
@@ -335,7 +336,7 @@ export default function ProfilePage() {
       return name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
     }
     return email.substring(0, 2).toUpperCase();
-  }
+  };
 
   return (
     <div className="space-y-8">
@@ -450,7 +451,7 @@ export default function ProfilePage() {
                         <CardHeader>
                         <CardTitle>Change Password</CardTitle>
                         <CardDescription>Update your account's password.</CardDescription>
-                        </Header>
+                        </CardHeader>
                         <CardContent className="space-y-4">
                             <FormField
                             control={passwordForm.control}
