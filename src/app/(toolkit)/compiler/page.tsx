@@ -13,7 +13,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const languageGroups = [
   {
-    label: "General-Purpose",
+    label: "General-Purpose Programming Languages",
     languages: [
       { value: "c", name: "C" },
       { value: "cpp", name: "C++" },
@@ -21,65 +21,93 @@ const languageGroups = [
       { value: "python", name: "Python" },
       { value: "csharp", name: "C#" },
       { value: "go", name: "Go (Golang)" },
+      { value: "rust", name: "Rust" },
       { value: "swift", name: "Swift" },
       { value: "kotlin", name: "Kotlin" },
       { value: "dart", name: "Dart" },
-      { value: "rust", name: "Rust" },
-      { value: "ruby", name: "Ruby" },
-      { value: "scala", name: "Scala" },
+      { value: "julia", name: "Julia" },
       { value: "perl", name: "Perl" },
-      { value: "lua", name: "Lua" },
-      { value: "objective-c", name: "Objective-C" },
-      { value: "groovy", name: "Groovy" },
       { value: "pascal", name: "Pascal" },
       { value: "fortran", name: "Fortran" },
       { value: "ada", name: "Ada" },
     ]
   },
   {
-    label: "Web Development",
+    label: "Web Development Languages",
     languages: [
       { value: "html", name: "HTML" },
       { value: "css", name: "CSS" },
       { value: "javascript", name: "JavaScript" },
       { value: "typescript", name: "TypeScript" },
       { value: "php", name: "PHP" },
-      { value: "sql", name: "SQL" },
-      { value: "nosql", name: "NoSQL" },
-      { value: "asp.net", name: "ASP.NET" },
-      { value: "jsp", name: "JSP" },
+      { value: "ruby", name: "Ruby (Ruby on Rails)" },
+      { value: "elixir", name: "Elixir (Phoenix framework)" },
+      { value: "erlang", name: "Erlang (messaging systems)" },
+      { value: "asp.net", name: "ASP.NET (C# web framework)" },
+      { value: "jsp", name: "JSP (Java Server Pages)" },
     ]
   },
   {
-    label: "Data Science & Analytics",
+    label: "Data Science, AI & Analytics",
     languages: [
+      { value: "python", name: "Python (NumPy, Pandas, TensorFlow)" },
       { value: "r", name: "R" },
-      { value: "matlab", name: "MATLAB" },
       { value: "julia", name: "Julia" },
+      { value: "matlab", name: "MATLAB" },
       { value: "sas", name: "SAS" },
       { value: "stata", name: "Stata" },
+      { value: "scala", name: "Scala (Apache Spark)" },
     ]
   },
   {
-    label: "Scripting & Automation",
+    label: "Database & Query Languages",
     languages: [
-      { value: "bash", name: "Bash / Shell" },
-      { value: "powershell", name: "PowerShell" },
-      { value: "awk", name: "AWK" },
-      { value: "tcl", name: "TCL" },
+      { value: "sql", name: "SQL" },
+      { value: "pl/sql", name: "PL/SQL (Oracle)" },
+      { value: "tsql", name: "T-SQL (Microsoft SQL Server)" },
+      { value: "nosql", name: "NoSQL (MongoDB queries)" },
+      { value: "graphql", name: "GraphQL (APIs)" },
     ]
   },
   {
-    label: "Functional & Academic",
+    label: "Mobile App Development Languages",
+    languages: [
+      { value: "swift", name: "Swift (iOS/macOS)" },
+      { value: "kotlin", name: "Kotlin (Android)" },
+      { value: "java", name: "Java (Android)" },
+      { value: "dart", name: "Dart (Flutter apps)" },
+      { value: "csharp", name: "C# (Xamarin, Unity mobile)" },
+    ]
+  },
+  {
+    label: "Scripting & Automation Languages",
+    languages: [
+      { value: "bash", name: "Bash / Shell Script" },
+      { value: "powershell", name: "PowerShell" },
+      { value: "python", name: "Python" },
+      { value: "perl", name: "Perl" },
+      { value: "groovy", name: "Groovy (Jenkins automation)" },
+    ]
+  },
+  {
+    label: "Functional & Academic Languages",
     languages: [
       { value: "haskell", name: "Haskell" },
       { value: "lisp", name: "Lisp" },
       { value: "scheme", name: "Scheme" },
-      { value: "prolog", name: "Prolog" },
       { value: "ocaml", name: "OCaml" },
       { value: "fsharp", name: "F#" },
-      { value: "erlang", name: "Erlang" },
-      { value: "elixir", name: "Elixir" },
+      { value: "prolog", name: "Prolog" },
+    ]
+  },
+  {
+    label: "Game Development Languages",
+    languages: [
+      { value: "cpp", name: "C++ (Unreal Engine, game engines)" },
+      { value: "csharp", name: "C# (Unity)" },
+      { value: "java", name: "Java (Minecraft, Android games)" },
+      { value: "gdscript", name: "GDScript (Godot engine)" },
+      { value: "lua", name: "Lua (Roblox, scripting inside games)" },
     ]
   }
 ];
