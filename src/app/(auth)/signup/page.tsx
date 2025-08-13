@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { getAuth, createUserWithEmailAndPassword, sendEmailVerification, updateProfile } from 'firebase/auth';
+import { getFirestore, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,7 @@ export default function SignupPage() {
   const router = useRouter();
   const { toast } = useToast();
   const auth = getAuth(app);
+  const db = getFirestore(app);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,10 +48,23 @@ export default function SignupPage() {
     startTransition(async () => {
       try {
         const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-        await updateProfile(userCredential.user, {
+        const user = userCredential.user;
+
+        // Update profile in Firebase Auth
+        await updateProfile(user, {
             displayName: values.displayName
         });
-        await sendEmailVerification(userCredential.user);
+
+        // Create user document in Firestore
+        await setDoc(doc(db, "users", user.uid), {
+            uid: user.uid,
+            displayName: values.displayName,
+            email: values.email,
+            createdAt: serverTimestamp(),
+            photoURL: user.photoURL, // Initially null
+        });
+
+        await sendEmailVerification(user);
         toast({
           title: 'Account Created',
           description: "We've sent a verification link to your email address.",
