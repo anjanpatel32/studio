@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import useLocalStorage from "@/hooks/use-local-storage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Loader2, Play, Terminal, IndianRupee, AlertCircle } from "lucide-react";
+import { Loader2, Play, Terminal, IndianRupee, AlertCircle, XCircle } from "lucide-react";
 import { executeCode, ExecuteCodeInput } from '@/ai/flows/execute-code';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -176,6 +176,7 @@ export default function CompilerPage() {
   const [compilationCount, setCompilationCount] = useLocalStorage('compilationCount', 0);
   const [isPending, startTransition] = useTransition();
   const [output, setOutput] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const isFreemiumBlocked = compilationCount >= FREE_TIER_LIMIT;
@@ -195,18 +196,16 @@ export default function CompilerPage() {
       return;
     }
     setOutput(null);
+    setError(null);
     startTransition(async () => {
       try {
         const result = await executeCode({ code, language } as ExecuteCodeInput);
         setOutput(result.output);
         setCompilationCount(prev => prev + 1);
-      } catch (error) {
-        console.error("Failed to execute code:", error);
-        toast({
-          variant: "destructive",
-          title: "An error occurred",
-          description: "Failed to execute code. Please try again.",
-        });
+      } catch (e) {
+        console.error("Failed to execute code:", e);
+        const errorMessage = e instanceof Error ? e.message : "An unknown error occurred.";
+        setError(`Failed to execute code. Please try again. Error: ${errorMessage}`);
       }
     });
   };
@@ -293,7 +292,7 @@ export default function CompilerPage() {
         </CardFooter>
       </Card>
 
-      {isFreemiumBlocked && (
+      {isFreemiumBlocked && !isPending && (
          <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Free Tier Limit Reached</AlertTitle>
@@ -303,7 +302,7 @@ export default function CompilerPage() {
         </Alert>
       )}
 
-      {(isPending || output !== null) && (
+      {(isPending || output !== null || error !== null) && (
         <Card>
             <CardHeader>
                 <CardTitle>Output</CardTitle>
@@ -317,6 +316,14 @@ export default function CompilerPage() {
                             <div className="h-4 bg-muted rounded w-1/2 animate-pulse"></div>
                         </div>
                     </div>
+                ) : error ? (
+                    <Alert variant="destructive">
+                        <XCircle className="h-4 w-4" />
+                        <AlertTitle>Execution Error</AlertTitle>
+                        <AlertDescription>
+                            <pre className="text-sm font-mono bg-transparent p-0 whitespace-pre-wrap">{error}</pre>
+                        </AlertDescription>
+                    </Alert>
                 ) : (
                     <Alert variant="default">
                         <Terminal className="h-4 w-4" />
