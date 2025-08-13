@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 
 import { Button } from '@/components/ui/button';
@@ -43,10 +43,11 @@ export default function SignupPage() {
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     startTransition(async () => {
       try {
-        await createUserWithEmailAndPassword(auth, values.email, values.password);
+        const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+        await sendEmailVerification(userCredential.user);
         toast({
           title: 'Account Created',
-          description: "You have successfully signed up.",
+          description: "We've sent a verification link to your email address.",
         });
         router.push('/compiler');
       } catch (error: any) {
