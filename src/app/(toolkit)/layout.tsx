@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Bot, Code, FileText, Menu, LogOut, User, Settings, LayoutDashboard, ListTodo, Timer, Notebook, Sun, Moon, Smile } from 'lucide-react';
+import { Bot, Code, Menu, LogOut, User, Settings, LayoutDashboard, Timer, Notebook, Sun, Moon } from 'lucide-react';
 import { AnimatedBackground } from '@/components/shared/animated-background';
 import { getAuth, onAuthStateChanged, User as FirebaseUser, signOut } from 'firebase/auth';
 import { app } from '@/lib/firebase';
@@ -39,7 +39,6 @@ import { useTheme } from 'next-themes';
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/compiler', label: 'Compiler', icon: Code },
-  { href: '/todo', label: 'To-Do List', icon: ListTodo },
   { href: '/notes', label: 'Notes', icon: Notebook },
   { href: '/pomodoro', label: 'Pomodoro', icon: Timer },
 ];

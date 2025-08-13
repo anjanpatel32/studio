@@ -5,7 +5,7 @@ import { getAuth } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Code, ListTodo, Bot, Settings, Timer, Notebook, FileText, Smile } from 'lucide-react';
+import { ArrowRight, Code, Settings, Timer, Notebook } from 'lucide-react';
 
 const tools = [
   {
@@ -13,12 +13,6 @@ const tools = [
     description: 'Write, run, and test your code in various languages.',
     href: '/compiler',
     icon: Code,
-  },
-  {
-    title: 'To-Do List',
-    description: 'Organize your tasks and manage your time effectively.',
-    href: '/todo',
-    icon: ListTodo,
   },
   {
     title: 'Notes',
