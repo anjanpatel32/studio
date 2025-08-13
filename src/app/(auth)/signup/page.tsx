@@ -54,7 +54,7 @@ export default function SignupPage() {
           title: 'Account Created',
           description: "We've sent a verification link to your email address.",
         });
-        router.push('/dashboard');
+        router.push('/verify-email');
       } catch (error: any) {
         let errorMessage = "An unknown error occurred.";
         if (error.code === 'auth/email-already-in-use') {

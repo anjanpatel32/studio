@@ -38,12 +38,16 @@ export default function LoginPage() {
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     startTransition(async () => {
       try {
-        await signInWithEmailAndPassword(auth, values.email, values.password);
+        const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
         toast({
           title: 'Signed In',
           description: 'You have successfully signed in.',
         });
-        router.push('/dashboard'); 
+        if(userCredential.user.emailVerified) {
+            router.push('/dashboard'); 
+        } else {
+            router.push('/verify-email');
+        }
       } catch (error: any) {
         let errorMessage = "An unknown error occurred.";
         if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {

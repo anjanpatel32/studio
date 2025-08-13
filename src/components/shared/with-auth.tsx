@@ -9,7 +9,6 @@ import { Loader2 } from 'lucide-react';
 
 const withAuth = <P extends object>(WrappedComponent: React.ComponentType<P>) => {
   const WithAuthComponent: React.FC<P> = (props) => {
-    const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
     const auth = getAuth(app);
@@ -17,11 +16,14 @@ const withAuth = <P extends object>(WrappedComponent: React.ComponentType<P>) =>
     useEffect(() => {
       const unsubscribe = onAuthStateChanged(auth, (user) => {
         if (user) {
-          setUser(user);
+          if (user.emailVerified) {
+             setLoading(false);
+          } else {
+            router.push('/verify-email');
+          }
         } else {
           router.push('/login');
         }
-        setLoading(false);
       });
 
       return () => unsubscribe();
@@ -39,10 +41,6 @@ const withAuth = <P extends object>(WrappedComponent: React.ComponentType<P>) =>
             </div>
         </>
       );
-    }
-
-    if (!user) {
-      return null;
     }
 
     return <WrappedComponent {...props} />;
