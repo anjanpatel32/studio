@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 const WORK_MINS = 25;
 const SHORT_BREAK_MINS = 5;
 const LONG_BREAK_MINS = 15;
-const TEST_MINS = 2;
+const TEST_MINS = 0.1; // 6 seconds for testing
 
 type Mode = 'work' | 'shortBreak' | 'longBreak' | 'test';
 
@@ -23,7 +23,16 @@ export default function PomodoroPage() {
   const [notificationPermission, setNotificationPermission] = useState('default');
 
   const { toast } = useToast();
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  
+  useEffect(() => {
+    // This effect runs only on the client, after hydration, ensuring audioRef is attached.
+    if (!audioRef.current) {
+      audioRef.current = new Audio('/sounds/alarm.mp3');
+      audioRef.current.preload = 'auto';
+    }
+  }, []);
+
 
   useEffect(() => {
     if ('Notification' in window) {
@@ -59,13 +68,20 @@ export default function PomodoroPage() {
   
   const showNotification = (message: string) => {
     if (notificationPermission === 'granted') {
-      new Notification('Pomodoro Timer', {
+      new Notification('StudentKit', {
         body: message,
         icon: '/logo.png', // Optional: add a logo in your public folder
       });
     }
   };
 
+  const playAlarm = () => {
+    if (audioRef.current) {
+        audioRef.current.currentTime = 0; // Rewind to start
+        audioRef.current.volume = 1.0;
+        audioRef.current.play().catch(error => console.error("Audio play failed:", error));
+    }
+  };
 
   const switchMode = useCallback((newMode: Mode) => {
     setIsActive(false);
@@ -81,8 +97,10 @@ export default function PomodoroPage() {
         setMinutes(LONG_BREAK_MINS);
         break;
       case 'test':
-        setMinutes(TEST_MINS);
-        break;
+        const testTotalSeconds = Math.floor(TEST_MINS * 60);
+        setMinutes(Math.floor(testTotalSeconds / 60));
+        setSeconds(testTotalSeconds % 60);
+        return; // Avoid resetting seconds to 0 for test mode
     }
     setSeconds(0);
   }, []);
@@ -94,10 +112,7 @@ export default function PomodoroPage() {
         if (seconds === 0) {
           if (minutes === 0) {
             // Timer finished
-            if (audioRef.current) {
-                audioRef.current.volume = 1.0;
-                audioRef.current.play();
-            }
+            playAlarm();
 
             if (mode === 'work') {
               const newCycles = cycles + 1;
@@ -141,7 +156,7 @@ export default function PomodoroPage() {
     mode === 'longBreak' ? LONG_BREAK_MINS :
     TEST_MINS
   ) * 60;
-  const progress = ((initialTotalSeconds - totalSeconds) / initialTotalSeconds) * 100;
+  const progress = initialTotalSeconds > 0 ? ((initialTotalSeconds - totalSeconds) / initialTotalSeconds) * 100 : 0;
   
   const timeDisplay = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
@@ -167,7 +182,7 @@ export default function PomodoroPage() {
               <TabsTrigger value="work">Work</TabsTrigger>
               <TabsTrigger value="shortBreak">Short Break</TabsTrigger>
               <TabsTrigger value="longBreak">Long Break</TabsTrigger>
-              <TabsTrigger value="test">Test (2m)</TabsTrigger>
+              <TabsTrigger value="test">Test</TabsTrigger>
             </TabsList>
           </Tabs>
         </CardHeader>
@@ -218,7 +233,7 @@ export default function PomodoroPage() {
           <p className="text-sm text-muted-foreground">Cycles completed: {cycles}</p>
         </CardFooter>
       </Card>
-      <audio ref={audioRef} src="/sounds/alarm.mp3" preload="auto" />
+      {/* Audio element is no longer rendered, it's created programmatically */}
     </div>
   );
 }
