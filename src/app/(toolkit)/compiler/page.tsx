@@ -5,10 +5,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import useLocalStorage from "@/hooks/use-local-storage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Loader2, Play, Terminal, IndianRupee, AlertCircle, XCircle } from "lucide-react";
+import { Loader2, Play, Terminal, IndianRupee, AlertCircle, XCircle, Wrench } from "lucide-react";
 import { executeCode, ExecuteCodeInput } from '@/ai/flows/execute-code';
+import { debugCode, DebugCodeInput, DebugCodeOutput } from '@/ai/flows/debug-code';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
 
 const helloWorldSnippets: { [key: string]: string } = {
   c: '#include <stdio.h>\n\nint main() {\n   printf("Hello, World!");\n   return 0;\n}',
@@ -175,8 +186,11 @@ export default function CompilerPage() {
   const [language, setLanguage] = useLocalStorage('compilerLanguage', 'javascript');
   const [compilationCount, setCompilationCount] = useLocalStorage('compilationCount', 0);
   const [isPending, startTransition] = useTransition();
+  const [isDebugging, startDebuggingTransition] = useTransition();
   const [output, setOutput] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [debugResult, setDebugResult] = useState<DebugCodeOutput | null>(null);
+  const [isDebugDialogOpen, setIsDebugDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const isFreemiumBlocked = compilationCount >= FREE_TIER_LIMIT;
@@ -206,6 +220,25 @@ export default function CompilerPage() {
         console.error("Failed to execute code:", e);
         const errorMessage = e instanceof Error ? e.message : "An unknown error occurred.";
         setError(`Failed to execute code. Please try again. Error: ${errorMessage}`);
+      }
+    });
+  };
+
+  const handleDebugCode = () => {
+    if (!error) return;
+
+    startDebuggingTransition(async () => {
+      try {
+        const result = await debugCode({ code, language, error } as DebugCodeInput);
+        setDebugResult(result);
+        setIsDebugDialogOpen(true);
+      } catch (e) {
+        console.error("Failed to debug code:", e);
+        toast({
+          variant: "destructive",
+          title: "Debugging Failed",
+          description: "The AI could not fix the code. Please try again.",
+        });
       }
     });
   };
@@ -323,6 +356,10 @@ export default function CompilerPage() {
                         <AlertDescription>
                             <pre className="text-sm font-mono bg-transparent p-0 whitespace-pre-wrap">{error}</pre>
                         </AlertDescription>
+                        <Button variant="secondary" size="sm" className="mt-4" onClick={handleDebugCode} disabled={isDebugging}>
+                           {isDebugging ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wrench className="mr-2 h-4 w-4" />}
+                            Explain & Fix Error
+                        </Button>
                     </Alert>
                 ) : (
                     <Alert variant="default">
@@ -336,6 +373,62 @@ export default function CompilerPage() {
             </CardContent>
         </Card>
       )}
+
+      <Dialog open={isDebugDialogOpen} onOpenChange={setIsDebugDialogOpen}>
+        <DialogContent className="sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>AI Code Debugger</DialogTitle>
+            <DialogDescription>
+              The AI has analyzed the error and suggested a fix.
+            </DialogDescription>
+          </DialogHeader>
+          {isDebugging ? (
+             <div className="flex items-center space-x-4">
+                <div className="space-y-2 flex-1">
+                    <div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div>
+                    <div className="h-4 bg-muted rounded w-1/2 animate-pulse"></div>
+                    <div className="h-4 bg-muted rounded w-full mt-4 animate-pulse"></div>
+                    <div className="h-4 bg-muted rounded w-full animate-pulse"></div>
+                </div>
+            </div>
+          ) : debugResult ? (
+            <div className="space-y-6 py-4 text-sm">
+                <div className='space-y-2'>
+                    <h3 className="font-semibold text-foreground">Error Explanation</h3>
+                    <p className="text-muted-foreground">{debugResult.explanation}</p>
+                </div>
+                <Separator/>
+                <div className='space-y-2'>
+                    <h3 className="font-semibold text-foreground">Suggested Fix</h3>
+                    <Card className="bg-muted/50">
+                        <CardContent className="p-4">
+                             <pre className="text-sm font-mono bg-transparent p-0 whitespace-pre-wrap">{debugResult.fixedCode}</pre>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+          ) : null}
+          <DialogFooter>
+             <DialogClose asChild>
+                <Button type="button" variant="secondary">
+                  Close
+                </Button>
+              </DialogClose>
+              <Button
+                type="button"
+                onClick={() => {
+                  if (debugResult) {
+                    setCode(debugResult.fixedCode);
+                  }
+                  setIsDebugDialogOpen(false);
+                }}
+                disabled={!debugResult}
+              >
+                Accept Fix
+              </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
