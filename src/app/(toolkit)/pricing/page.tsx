@@ -23,7 +23,7 @@ export default function PricingPage() {
     const auth = getAuth(app);
     const user = auth.currentUser;
     
-    const paymentLink = "https://payments-test.cashfree.com/links?code=F90tr081omp0";
+    const paymentLink = "upi://pay?pa=9666335190@axl&pn=KOPPULA%20ANJAN%20KUMAR&mc=0000&mode=02&purpose=00";
 
     const handlePaymentClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
         if (!user) {
@@ -67,7 +67,7 @@ export default function PricingPage() {
                     </CardContent>
                     <CardFooter>
                         <Button className="w-full" size="lg" asChild>
-                           <Link href={paymentLink} target="_blank" onClick={handlePaymentClick}>
+                           <Link href={paymentLink} onClick={handlePaymentClick}>
                              <IndianRupee className="mr-2 h-5 w-5" />
                              Upgrade to Pro
                            </Link>
