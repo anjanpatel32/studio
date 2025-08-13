@@ -1,17 +1,19 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import useLocalStorage from '@/hooks/use-local-storage';
+import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy } from 'firebase/firestore';
+import { getAuth, User } from 'firebase/auth';
+import { app } from '@/lib/firebase';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2, Pencil, Save, X, ListTodo } from 'lucide-react';
+import { Plus, Trash2, Pencil, Save, X, ListTodo, Loader2 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Separator } from '@/components/ui/separator';
 
@@ -19,6 +21,8 @@ type Task = {
   id: string;
   text: string;
   completed: boolean;
+  createdAt: any;
+  uid: string;
 };
 
 const taskSchema = z.object({
@@ -26,9 +30,41 @@ const taskSchema = z.object({
 });
 
 export default function TodoPage() {
-  const [tasks, setTasks] = useLocalStorage<Task[]>('todo-tasks', []);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
+  
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const [user, setUser] = useState<User | null>(auth.currentUser);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setUser(user);
+    });
+    return () => unsubscribe();
+  }, [auth]);
+  
+  useEffect(() => {
+    if (user) {
+      setLoading(true);
+      const q = query(collection(db, "tasks"), where("uid", "==", user.uid), orderBy("createdAt", "desc"));
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const tasksData: Task[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
+        setTasks(tasksData);
+        setLoading(false);
+      }, (error) => {
+          console.error("Error fetching tasks: ", error);
+          setLoading(false);
+      });
+
+      return () => unsubscribe();
+    } else {
+        setTasks([]);
+        setLoading(false);
+    }
+  }, [user, db]);
 
   const form = useForm<z.infer<typeof taskSchema>>({
     resolver: zodResolver(taskSchema),
@@ -37,26 +73,27 @@ export default function TodoPage() {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof taskSchema>) => {
-    const newTask: Task = {
-      id: new Date().toISOString(),
+  const onSubmit = async (values: z.infer<typeof taskSchema>) => {
+    if (!user) return;
+    await addDoc(collection(db, 'tasks'), {
       text: values.text,
       completed: false,
-    };
-    setTasks([newTask, ...tasks]);
+      createdAt: new Date(),
+      uid: user.uid,
+    });
     form.reset();
   };
 
-  const toggleTask = (id: string) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === id ? { ...task, completed: !task.completed } : task
-      )
-    );
+  const toggleTask = async (id: string) => {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+    const taskRef = doc(db, 'tasks', id);
+    await updateDoc(taskRef, { completed: !task.completed });
   };
 
-  const deleteTask = (id: string) => {
-    setTasks(tasks.filter((task) => task.id !== id));
+  const deleteTask = async (id: string) => {
+    const taskRef = doc(db, 'tasks', id);
+    await deleteDoc(taskRef);
   };
 
   const startEditing = (task: Task) => {
@@ -64,13 +101,12 @@ export default function TodoPage() {
     setEditingText(task.text);
   };
   
-  const saveEdit = (id: string) => {
+  const saveEdit = async (id: string) => {
     if (editingText.trim() === '') {
       deleteTask(id);
     } else {
-      setTasks(
-        tasks.map((task) => (task.id === id ? { ...task, text: editingText } : task))
-      );
+      const taskRef = doc(db, 'tasks', id);
+      await updateDoc(taskRef, { text: editingText });
     }
     setEditingTaskId(null);
     setEditingText('');
@@ -81,15 +117,26 @@ export default function TodoPage() {
     setEditingText('');
   }
 
-  const completedTasks = tasks.filter(task => task.completed);
-  const pendingTasks = tasks.filter(task => !task.completed);
+  const { pendingTasks, completedTasks } = useMemo(() => {
+    return tasks.reduce(
+        (acc, task) => {
+            if (task.completed) {
+                acc.completedTasks.push(task);
+            } else {
+                acc.pendingTasks.push(task);
+            }
+            return acc;
+        },
+        { pendingTasks: [] as Task[], completedTasks: [] as Task[] }
+    );
+  }, [tasks]);
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-headline font-bold tracking-tight">To-Do List</h1>
         <p className="text-muted-foreground mt-1">
-          Organize your tasks and stay on top of your work.
+          Organize your tasks and stay on top of your work. Your tasks are synced across all your devices.
         </p>
       </div>
 
@@ -111,7 +158,7 @@ export default function TodoPage() {
                        <FormControl>
                         <Input placeholder="e.g., Finish math homework" {...field} />
                       </FormControl>
-                      <Button type="submit">
+                      <Button type="submit" disabled={!user}>
                         <Plus className="h-4 w-4" />
                         <span className="sr-only">Add Task</span>
                       </Button>
@@ -127,7 +174,11 @@ export default function TodoPage() {
       
       <div className="space-y-4">
         <h2 className="text-2xl font-headline font-semibold">Your Tasks ({pendingTasks.length})</h2>
-        {tasks.length > 0 ? (
+        {loading ? (
+            <div className="flex items-center justify-center py-10">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        ) : tasks.length > 0 ? (
           <div className="space-y-2">
             <AnimatePresence>
             {pendingTasks.map((task) => (
@@ -222,7 +273,6 @@ export default function TodoPage() {
             </div>
         </div>
        )}
-
     </div>
   );
 }

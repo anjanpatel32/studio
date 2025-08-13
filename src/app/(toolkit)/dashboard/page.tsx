@@ -3,9 +3,9 @@
 import Link from 'next/link';
 import { getAuth } from 'firebase/auth';
 import { app } from '@/lib/firebase';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Code, ListTodo, Bot, Settings } from 'lucide-react';
+import { ArrowRight, Code, ListTodo, Bot, Settings, Timer, Notebook } from 'lucide-react';
 
 const tools = [
   {
@@ -19,6 +19,18 @@ const tools = [
     description: 'Organize your tasks and manage your time effectively.',
     href: '/todo',
     icon: ListTodo,
+  },
+  {
+    title: 'Notes',
+    description: 'Create and manage your personal or study notes.',
+    href: '/notes',
+    icon: Notebook,
+  },
+  {
+    title: 'Pomodoro Timer',
+    description: 'Boost your productivity with the Pomodoro technique.',
+    href: '/pomodoro',
+    icon: Timer,
   },
 ];
 

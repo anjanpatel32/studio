@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Bot, Code, FileText, Menu, LogOut, User, Settings, LayoutDashboard, ListTodo } from 'lucide-react';
+import { Bot, Code, FileText, Menu, LogOut, User, Settings, LayoutDashboard, ListTodo, Timer, Notebook, Sun, Moon } from 'lucide-react';
 import { AnimatedBackground } from '@/components/shared/animated-background';
 import { getAuth, onAuthStateChanged, User as FirebaseUser, signOut } from 'firebase/auth';
 import { app } from '@/lib/firebase';
@@ -28,13 +28,20 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal
 } from "@/components/ui/dropdown-menu"
 import { useToast } from '@/hooks/use-toast';
+import { useTheme } from 'next-themes';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/compiler', label: 'Compiler', icon: Code },
   { href: '/todo', label: 'To-Do List', icon: ListTodo },
+  { href: '/notes', label: 'Notes', icon: Notebook },
+  { href: '/pomodoro', label: 'Pomodoro', icon: Timer },
 ];
 
 function ToolkitLayout({
@@ -45,6 +52,7 @@ function ToolkitLayout({
   const pathname = usePathname();
   const router = useRouter();
   const { toast } = useToast();
+  const { setTheme } = useTheme();
   const [user, setUser] = React.useState<FirebaseUser | null>(null);
   const auth = getAuth(app);
   
@@ -127,6 +135,27 @@ function ToolkitLayout({
                           <span>Profile</span>
                         </Link>
                       </DropdownMenuItem>
+                       <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                          <Sun className="mr-2 h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                          <Moon className="absolute mr-2 h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                          <span>Toggle theme</span>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                          <DropdownMenuSubContent>
+                            <DropdownMenuItem onClick={() => setTheme("light")}>
+                              Light
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setTheme("dark")}>
+                              Dark
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setTheme("system")}>
+                              System
+                            </DropdownMenuItem>
+                          </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                      </DropdownMenuSub>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleSignOut}>
                         <LogOut className="mr-2 h-4 w-4" />
                         <span>Log out</span>
