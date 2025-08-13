@@ -585,7 +585,7 @@ export default function ProfilePage() {
             </Button>
             <Button onClick={handleCrop} disabled={uploadPending}>
                 {uploadPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Check className="mr-2 h-4 w-4"/>}
-                Crop & Save
+                Crop &amp; Save
             </Button>
           </DialogFooter>
         </DialogContent>

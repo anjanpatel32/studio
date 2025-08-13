@@ -20,7 +20,7 @@ export default function PomodoroPage() {
 
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const switchMode = useCallback((newMode: 'work' | 'shortBreak' | 'longBreak'>) => {
+  const switchMode = useCallback((newMode: 'work' | 'shortBreak' | 'longBreak') => {
     setIsActive(false);
     setMode(newMode);
     switch (newMode) {
