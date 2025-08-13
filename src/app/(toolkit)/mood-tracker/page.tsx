@@ -1,13 +1,14 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { getFirestore, collection, onSnapshot, addDoc, doc, query, where, orderBy, serverTimestamp, limit, startOfDay, endOfDay, Timestamp } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, addDoc, doc, query, where, orderBy, serverTimestamp, limit, Timestamp } from 'firebase/firestore';
 import { getAuth, User } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Loader2, Smile, Frown, Meh, Laugh, Angry, History, Calendar, BarChart2 } from 'lucide-react';
-import { format, subDays, startOfWeek } from 'date-fns';
+import { format, subDays, startOfWeek, startOfDay, endOfDay } from 'date-fns';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
