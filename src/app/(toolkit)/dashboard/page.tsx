@@ -6,6 +6,7 @@ import { app } from '@/lib/firebase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Code, Settings, Timer, Notebook, IndianRupee } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const tools = [
   {
@@ -43,6 +44,20 @@ const otherLinks = [
     }
 ]
 
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.1,
+      duration: 0.5,
+      ease: "easeOut",
+    },
+  }),
+};
+
+
 export default function DashboardPage() {
   const auth = getAuth(app);
   const user = auth.currentUser;
@@ -65,25 +80,33 @@ export default function DashboardPage() {
             <CardDescription>Essential utilities for your success.</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tools.map((tool) => (
-              <Card key={tool.title} className="flex flex-col">
-                <CardHeader>
-                  <div className="flex items-center gap-4">
-                    <tool.icon className="h-8 w-8 text-primary" />
-                    <CardTitle className="text-xl font-headline">{tool.title}</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex-grow">
-                  <p className="text-muted-foreground">{tool.description}</p>
-                </CardContent>
-                <CardFooter>
-                  <Button asChild variant="secondary" className="w-full">
-                    <Link href={tool.href}>
-                      Open Tool <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                </CardFooter>
-              </Card>
+            {tools.map((tool, index) => (
+              <motion.div
+                key={tool.title}
+                custom={index}
+                initial="hidden"
+                animate="visible"
+                variants={cardVariants}
+              >
+                <Card className="flex flex-col h-full">
+                  <CardHeader>
+                    <div className="flex items-center gap-4">
+                      <tool.icon className="h-8 w-8 text-primary" />
+                      <CardTitle className="text-xl font-headline">{tool.title}</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="flex-grow">
+                    <p className="text-muted-foreground">{tool.description}</p>
+                  </CardContent>
+                  <CardFooter>
+                    <Button asChild variant="secondary" className="w-full">
+                      <Link href={tool.href}>
+                        Open Tool <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </motion.div>
             ))}
           </CardContent>
         </Card>
@@ -94,25 +117,33 @@ export default function DashboardPage() {
             <CardDescription>Manage your profile and subscription.</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {otherLinks.map((link) => (
-              <Card key={link.title} className="flex flex-col">
-                <CardHeader>
-                  <div className="flex items-center gap-4">
-                    <link.icon className="h-8 w-8 text-primary" />
-                    <CardTitle className="text-xl font-headline">{link.title}</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex-grow">
-                  <p className="text-muted-foreground">{link.description}</p>
-                </CardContent>
-                <CardFooter>
-                  <Button asChild variant="secondary" className="w-full">
-                    <Link href={link.href}>
-                      Go to Page <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                </CardFooter>
-              </Card>
+            {otherLinks.map((link, index) => (
+               <motion.div
+                key={link.title}
+                custom={tools.length + index}
+                initial="hidden"
+                animate="visible"
+                variants={cardVariants}
+              >
+                <Card className="flex flex-col h-full">
+                  <CardHeader>
+                    <div className="flex items-center gap-4">
+                      <link.icon className="h-8 w-8 text-primary" />
+                      <CardTitle className="text-xl font-headline">{link.title}</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="flex-grow">
+                    <p className="text-muted-foreground">{link.description}</p>
+                  </CardContent>
+                  <CardFooter>
+                    <Button asChild variant="secondary" className="w-full">
+                      <Link href={link.href}>
+                        Go to Page <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </motion.div>
             ))}
           </CardContent>
         </Card>
