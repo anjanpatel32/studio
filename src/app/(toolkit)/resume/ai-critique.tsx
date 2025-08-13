@@ -4,7 +4,7 @@ import React, { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { critiqueResume, CritiqueResumeInput } from '@/ai/flows/critique-resume';
+import { critiqueResume, CritiqueResumeInput, CritiqueResumeOutput } from '@/ai/flows/critique-resume';
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ interface AiCritiqueProps {
 
 export function AiCritique({ resumeText }: AiCritiqueProps) {
   const [isPending, startTransition] = useTransition();
-  const [critique, setCritique] = useState<string | null>(null);
+  const [critique, setCritique] = useState<CritiqueResumeOutput | null>(null);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -43,7 +43,7 @@ export function AiCritique({ resumeText }: AiCritiqueProps) {
           jobDescription: values.jobDescription,
         };
         const result = await critiqueResume(input);
-        setCritique(result.critique);
+        setCritique(result);
       } catch (error) {
         console.error("Failed to get resume critique:", error);
         toast({
@@ -135,7 +135,7 @@ export function AiCritique({ resumeText }: AiCritiqueProps) {
             <Sparkles className="h-4 w-4" />
             <AlertTitle className="font-headline">AI Feedback</AlertTitle>
             <AlertDescription>
-              <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: critique.replace(/\n/g, '<br />') }} />
+              <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: critique.critique }} />
             </AlertDescription>
           </Alert>
         </div>

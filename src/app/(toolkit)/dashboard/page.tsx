@@ -5,7 +5,7 @@ import { getAuth } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Code, ListTodo, Bot, Settings, Timer, Notebook } from 'lucide-react';
+import { ArrowRight, Code, ListTodo, Bot, Settings, Timer, Notebook, FileText, Smile } from 'lucide-react';
 
 const tools = [
   {
@@ -31,6 +31,18 @@ const tools = [
     description: 'Boost your productivity with the Pomodoro technique.',
     href: '/pomodoro',
     icon: Timer,
+  },
+   {
+    title: 'Resume Builder',
+    description: 'Build your resume and get AI-powered feedback.',
+    href: '/resume',
+    icon: FileText,
+  },
+  {
+    title: 'Mood Tracker',
+    description: 'Track your daily mood and gain self-awareness.',
+    href: '/mood-tracker',
+    icon: Smile,
   },
 ];
 
