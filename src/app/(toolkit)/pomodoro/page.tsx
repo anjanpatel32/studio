@@ -66,22 +66,23 @@ export default function PomodoroPage() {
     });
   };
   
-  const showNotification = (message: string) => {
-    if (notificationPermission === 'granted') {
-      new Notification('StudentKit', {
-        body: message,
-        icon: '/logo.png', // Optional: add a logo in your public folder
-      });
-    }
-  };
-
-  const playAlarm = () => {
+  const playAlarm = useCallback(() => {
     if (audioRef.current) {
         audioRef.current.currentTime = 0; // Rewind to start
         audioRef.current.volume = 1.0;
         audioRef.current.play().catch(error => console.error("Audio play failed:", error));
     }
-  };
+  }, []);
+
+  const showNotification = useCallback((message: string) => {
+    if (notificationPermission === 'granted') {
+      new Notification('StudentKit', {
+        body: message,
+        icon: '/logo.png', // Optional: add a logo in your public folder
+      });
+      playAlarm();
+    }
+  }, [notificationPermission, playAlarm]);
 
   const switchMode = useCallback((newMode: Mode) => {
     setIsActive(false);
@@ -139,7 +140,7 @@ export default function PomodoroPage() {
       clearInterval(interval!);
     }
     return () => clearInterval(interval!);
-  }, [isActive, seconds, minutes, mode, cycles, switchMode, notificationPermission]);
+  }, [isActive, seconds, minutes, mode, cycles, switchMode, showNotification, playAlarm]);
 
   const toggleTimer = () => {
     setIsActive(!isActive);
