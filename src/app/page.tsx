@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
 export default function Home() {
-  redirect('/compiler');
+  redirect('/login');
   return null;
 }

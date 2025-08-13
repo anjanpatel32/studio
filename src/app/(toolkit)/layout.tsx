@@ -15,8 +15,11 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Bot, Code, FileText, Menu } from 'lucide-react';
+import { Bot, Code, FileText, Menu, LogIn, User } from 'lucide-react';
 import { AnimatedBackground } from '@/components/shared/animated-background';
+import { getAuth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { app } from '@/lib/firebase';
+import React from 'react';
 
 const navItems = [
   { href: '/compiler', label: 'Compiler', icon: Code },
@@ -28,6 +31,18 @@ export default function ToolkitLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [user, setUser] = React.useState<FirebaseUser | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const auth = getAuth(app);
+  
+  React.useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, [auth]);
+
 
   const getLinkClassName = (href: string) => {
     const isActive = pathname === href;
@@ -65,6 +80,25 @@ export default function ToolkitLayout({
               ))}
             </SidebarMenu>
           </SidebarContent>
+           <SidebarFooter className="p-2">
+            {!loading && (
+              user ? (
+                 <SidebarMenuItem>
+                   <div className={cn(getLinkClassName('#'), "cursor-default")}>
+                      <User className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{user.email}</span>
+                   </div>
+                 </SidebarMenuItem>
+              ) : (
+                <SidebarMenuItem>
+                   <Link href="/login" className={getLinkClassName('/login')}>
+                    <LogIn className="h-4 w-4 shrink-0" />
+                    <span>Login</span>
+                  </Link>
+                </SidebarMenuItem>
+              )
+            )}
+           </SidebarFooter>
         </Sidebar>
         <SidebarInset className="bg-transparent md:bg-card/50 md:backdrop-blur-sm">
             <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b bg-card/50 px-4 backdrop-blur-sm md:hidden">
