@@ -1,0 +1,25 @@
+
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() { 
+      return request.auth != null; 
+    }
+
+    match /reels/{uid}/{reelId}.mp4 {
+      allow read: if isSignedIn(); // Token-guarded (or use signed URLs)
+      allow write: if isSignedIn() && request.auth.uid == uid;
+    }
+    
+    match /reels/{uid}/{reelId}_thumb.jpg {
+      // Visibility check is done via Firestore rules when generating the URL
+      allow read: if true; 
+      allow write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    match /avatars/{uid}.jpg {
+      allow read: if true;
+      allow write: if isSignedIn() && request.auth.uid == uid;
+    }
+  }
+}
