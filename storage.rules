@@ -2,58 +2,41 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-  
-    // Default: Deny all reads and writes
+
+    // Default deny all
     match /{allPaths=**} {
       allow read, write: if false;
     }
 
-    // Profile Pictures:
-    // - Anyone can read profile pictures.
-    // - Authenticated users can only write to their own profile picture path.
-    // - Max file size of 2MB.
-    match /users/{userId}/profile.jpg {
+    // User Avatars
+    match /avatars/{userId}/{fileName} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId && request.resource.size < 2 * 1024 * 1024;
+      allow write: if request.auth != null && request.auth.uid == userId
+                   && request.resource.size < 2 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
     }
-    
-    // Reels:
-    // - Anyone can read reel videos.
-    // - Authenticated users can write to their own reels folder.
-    // - Max file size of 100MB.
-    // - Must be a video file.
-    match /users/{userId}/reels/{reelId} {
+
+    // Reel Videos
+    match /reels/{userId}/{reelId}/{fileName} {
       allow read: if true;
-      allow write: if request.auth != null 
-                   && request.auth.uid == userId 
+      allow write: if request.auth != null && request.auth.uid == userId
                    && request.resource.size < 100 * 1024 * 1024
                    && request.resource.contentType.matches('video/.*');
     }
-
-    // Posts:
-    // - Anyone can read post images.
-    // - Authenticated users can write to their own posts folder.
-    // - Max file size of 5MB.
-    // - Must be an image file.
-    match /users/{userId}/posts/{postId}/{imageId} {
-      allow read: if true;
-      allow write: if request.auth != null 
-                   && request.auth.uid == userId 
-                   && request.resource.size < 5 * 1024 * 1024
-                   && request.resource.contentType.matches('image/.*');
-    }
     
-    // Stories:
-    // - Authenticated users can read stories. (Simplified rule)
-    // - Authenticated users can write to their own stories folder.
-    // - Max file size of 10MB.
-    // - Must be an image or video file.
-    match /users/{userId}/stories/{storyId} {
+    // Post Images
+    match /posts/{userId}/{postId}/{fileName} {
+        allow read: if true;
+        allow write: if request.auth != null && request.auth.uid == userId
+                     && request.resource.size < 5 * 1024 * 1024
+                     && request.resource.contentType.matches('image/.*');
+    }
+
+    // Story Media
+    match /stories/{userId}/{storyId}/{fileName} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null 
-                   && request.auth.uid == userId 
-                   && request.resource.size < 10 * 1024 * 1024
-                   && (request.resource.contentType.matches('image/.*') || request.resource.contentType.matches('video/.*'));
+      allow write: if request.auth != null && request.auth.uid == userId
+                   && request.resource.size < 10 * 1024 * 1024;
     }
   }
 }
