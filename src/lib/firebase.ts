@@ -4,14 +4,13 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  "projectId": "student-toolkit-s36f8",
-  "appId": "1:1057582139502:web:c1f49ad958f79dc83a3e7f",
-  "storageBucket": "student-toolkit-s36f8.firebasestorage.app",
-  "apiKey": "AIzaSyDvWu67Stbw2O6Onpy1aFv5Nd7Flg7U9mQ",
-  "authDomain": "student-toolkit-s36f8.firebaseapp.com",
-  "measurementId": "",
+  "projectId": "zyreel-app",
+  "appId": "1:1057582139502:web:aa29d81b2c4c818b7b2503",
+  "storageBucket": "zyreel-app.appspot.com",
+  "apiKey": "AIzaSyDFfGvA_l2bCi061JbsoXp_82r529z5YxM",
+  "authDomain": "zyreel-app.firebaseapp.com",
   "messagingSenderId": "1057582139502",
-  "databaseURL": "https://student-toolkit-s36f8.firebaseio.com"
+  "databaseURL": "https://zyreel-app.firebaseio.com"
 };
 
 // Initialize Firebase

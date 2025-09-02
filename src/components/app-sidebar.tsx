@@ -32,15 +32,15 @@ import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useUserProfile } from '@/hooks/use-user-profile';
 import { useTranslation } from '@/app/i18n/client';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 const menuItems = [
   { id: 'home', href: '/', icon: Home, label: 'home' },
   { id: 'explore', href: '/explore', icon: Compass, label: 'explore' },
-  { id: 'messages', href: '/messages', icon: MessageCircle, label: 'messages', notificationCount: 5 },
-  { id: 'notifications', href: '/notifications', icon: Heart, label: 'notifications', notificationCount: 10 },
   { id: 'create', href: '/upload', icon: PlusSquare, label: 'create' },
+  { id: 'notifications', href: '/notifications', icon: Heart, label: 'notifications', notificationCount: 10 },
   { id: 'profile', href: '/profile', icon: User, label: 'profile' },
-  { id: 'rewards', href: '/rewards', icon: Award, label: 'rewards' },
 ];
 
 export default function AppSidebar({ lng }: { lng: string }) {
@@ -48,6 +48,7 @@ export default function AppSidebar({ lng }: { lng: string }) {
   const router = useRouter();
   const { toast } = useToast();
   const { t } = useTranslation(lng, 'translation');
+  const isMobile = useIsMobile();
 
   const { user, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading } = useUserProfile(user?.uid);
@@ -64,23 +65,39 @@ export default function AppSidebar({ lng }: { lng: string }) {
 
   const isActive = (href: string) => {
     if (href === '/') {
-        return pathname === `/${lng}` || pathname === '/';
+        const currentPath = pathname.substring(pathname.indexOf('/', 1));
+        return currentPath === `/${lng}` || currentPath === '/';
     }
     return pathname.startsWith(`/${lng}${href}`);
   };
+
+  if (isMobile) {
+      return (
+        <div className="flex justify-around items-center w-full h-16">
+             {menuItems.map((item) => (
+                <Link href={`/${lng}${item.href}`} key={item.id} passHref>
+                    <div className={cn("flex flex-col items-center gap-1 p-2 rounded-md", isActive(item.href) ? "text-primary" : "text-muted-foreground")}>
+                        <item.icon className="h-6 w-6"/>
+                        {/* <span className="text-xs">{t(item.label)}</span> */}
+                    </div>
+                </Link>
+             ))}
+        </div>
+      )
+  }
 
   return (
       <>
       <SidebarHeader>
         <div className="flex items-center gap-2">
             <Bot className="w-8 h-8 text-primary" />
-            <h1 className="text-xl font-bold font-headline group-data-[collapsible=icon]:hidden">ZYREEL</h1>
+            <h1 className="text-xl font-bold group-data-[collapsible=icon]:hidden">ZYREEL</h1>
         </div>
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarMenu>
-          {menuItems.map((item) => (
+          {[...menuItems, { id: 'messages', href: '/messages', icon: MessageCircle, label: 'messages', notificationCount: 5 }, { id: 'rewards', href: '/rewards', icon: Award, label: 'rewards' }].map((item) => (
             <SidebarMenuItem key={item.id}>
               <Link href={`/${lng}${item.href}`} passHref legacyBehavior>
                 <SidebarMenuButton
