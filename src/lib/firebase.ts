@@ -1,4 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
   "projectId": "student-toolkit-s36f8",
@@ -12,3 +13,4 @@ const firebaseConfig = {
 
 // Initialize Firebase
 export const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+export const auth = getAuth(app);
