@@ -98,7 +98,7 @@ export default function UserProfilePage() {
   return (
     <div className="container mx-auto max-w-4xl p-4 md:p-8">
       <div className="flex flex-col md:flex-row items-center md:items-start text-center md:text-left space-y-4 md:space-y-0 md:space-x-8 mb-8">
-        <Avatar className="h-24 w-24 md:h-32 md:w-32 border-4 border-primary shrink-0">
+        <Avatar className="h-24 w-24 md:h-32 md:w-32 border-4 shrink-0">
           <AvatarImage src={profile.photoURL} data-ai-hint="profile avatar" />
           <AvatarFallback className="text-4xl">{profile.displayName.charAt(0).toUpperCase()}</AvatarFallback>
         </Avatar>

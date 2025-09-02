@@ -32,7 +32,7 @@ import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useUserProfile } from '@/hooks/use-user-profile';
 import { useTranslation } from '@/app/i18n/client';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 import { cn } from '@/lib/utils';
 
 const menuItems = [
@@ -90,9 +90,9 @@ export default function AppSidebar({ lng }: { lng: string }) {
   return (
       <>
       <SidebarHeader>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
             <Bot className="w-8 h-8 text-primary" />
-            <h1 className="text-xl font-bold group-data-[collapsible=icon]:hidden font-headline">ZYREEL</h1>
+            <h1 className="text-xl font-bold group-data-[collapsible=icon]:hidden font-headline tracking-tighter">ZYREEL</h1>
         </div>
       </SidebarHeader>
 
@@ -121,7 +121,6 @@ export default function AppSidebar({ lng }: { lng: string }) {
       </SidebarContent>
 
       <SidebarFooter>
-        <SidebarSeparator />
          <SidebarMenu>
            <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={pathname.startsWith(`/${lng}/settings`)} tooltip={{ children: t('settings') }}>
@@ -141,14 +140,16 @@ export default function AppSidebar({ lng }: { lng: string }) {
             )}
          </SidebarMenu>
 
+        <SidebarSeparator className="my-1" />
+
         <Link href={user ? `/${lng}/profile` : `/${lng}/login`}>
-            <div className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted">
+            <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted">
                 <Avatar className="h-10 w-10">
                     <AvatarImage src={profile?.photoURL} />
                     <AvatarFallback>{profile?.displayName?.charAt(0) || '?'}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-                    <p className="font-semibold text-sm">{profile?.displayName || 'Guest'}</p>
+                    <p className="font-semibold text-sm truncate">{profile?.displayName || 'Guest'}</p>
                     <p className="text-xs text-muted-foreground">{user ? 'View profile' : 'Sign In'}</p>
                 </div>
             </div>

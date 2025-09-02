@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { firestore } from '@/lib/firebase';
 import { collection, query, onSnapshot, orderBy, doc, getDoc } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
 
 interface ReelCardProps {
   reel: Reel;
@@ -133,18 +134,16 @@ export default function ReelCard({ reel, lng }: ReelCardProps) {
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10 pointer-events-none"></div>
 
       {/* Header */}
-      <div className="absolute top-4 left-4 text-white z-10 flex items-center gap-2">
+      <div className="absolute top-4 left-4 text-white z-10 flex items-center gap-3">
         <Link href={`/${lng}/profile/${reel.ownerUid}`}>
             <Avatar className="h-10 w-10 border-2 border-white">
             <AvatarImage src={reel.user?.avatarUrl} alt={reel.user?.name} />
             <AvatarFallback>{reel.user?.name?.charAt(0) || 'U'}</AvatarFallback>
             </Avatar>
         </Link>
-        <div>
-            <Link href={`/${lng}/profile/${reel.ownerUid}`}>
-                <h3 className="font-semibold text-sm">{reel.user?.name}</h3>
-            </Link>
-        </div>
+        <Link href={`/${lng}/profile/${reel.ownerUid}`}>
+            <h3 className="font-semibold text-sm">{reel.user?.name}</h3>
+        </Link>
         {!isOwnReel && !followLoading && (
             <Button size="sm" variant={isFollowing ? 'secondary' : 'default'} onClick={handleFollowToggle} className="h-7 text-xs px-3">
                 {isFollowing ? 'Following' : 'Follow'}
@@ -153,23 +152,23 @@ export default function ReelCard({ reel, lng }: ReelCardProps) {
       </div>
 
       {/* Footer Info */}
-      <div className="absolute bottom-4 left-4 text-white z-10">
+      <div className="absolute bottom-4 left-4 right-20 text-white z-10">
         <p className="text-sm font-semibold">{reel.caption}</p>
-        <p className="text-xs text-white/80">{reel.hashtags?.map(h => `#${h}`).join(' ')}</p>
+        <p className="text-xs text-white/80 mt-1">{reel.hashtags?.map(h => `#${h}`).join(' ')}</p>
       </div>
 
       {/* Side Actions */}
       <div className="absolute right-2 bottom-4 z-10 flex flex-col items-center gap-4 text-white">
         <button className="flex flex-col items-center" onClick={handleLike}>
           <Heart className={cn("h-8 w-8", isLiked ? 'text-red-500 fill-current' : '')} />
-          <span className="text-xs">{likesCount}</span>
+          <span className="text-xs font-semibold mt-1">{likesCount}</span>
         </button>
 
         <Sheet>
             <SheetTrigger asChild>
                 <button className="flex flex-col items-center">
                     <MessageCircle className="h-8 w-8" />
-                    <span className="text-xs">{reel.commentsCount}</span>
+                    <span className="text-xs font-semibold mt-1">{reel.commentsCount}</span>
                 </button>
             </SheetTrigger>
             <SheetContent>
@@ -215,7 +214,7 @@ export default function ReelCard({ reel, lng }: ReelCardProps) {
         
         <button className="flex flex-col items-center" onClick={handleShare}>
           <Share2 className="h-8 w-8" />
-          <span className="text-xs">{reel.sharesCount}</span>
+          <span className="text-xs font-semibold mt-1">{reel.sharesCount}</span>
         </button>
         <button className="flex flex-col items-center">
           <MoreVertical className="h-8 w-8" />
