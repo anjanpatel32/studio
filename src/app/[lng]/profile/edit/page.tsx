@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,6 +18,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useUserProfile } from '@/hooks/use-user-profile';
 import { updateProfile } from '@/app/profile/edit/actions';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 const formSchema = z.object({
   displayName: z
@@ -42,12 +43,21 @@ export default function EditProfilePage({ params }: { params: {lng: string}}) {
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(formSchema),
-    values: { // Use values instead of defaultValues to react to profile changes
-        displayName: profile?.displayName || '',
-        bio: profile?.bio || '',
+    defaultValues: {
+        displayName: '',
+        bio: '',
     },
     mode: 'onChange'
   });
+
+  useEffect(() => {
+    if (profile) {
+      form.reset({
+        displayName: profile.displayName || '',
+        bio: profile.bio || '',
+      });
+    }
+  }, [profile, form]);
 
   async function onSubmit(values: ProfileFormValues) {
     if (!user) {
@@ -67,7 +77,7 @@ export default function EditProfilePage({ params }: { params: {lng: string}}) {
         title: 'Profile Updated!',
         description: 'Your changes have been saved.',
       });
-      router.push(`/${lng}/profile`);
+      router.push(`/${lng}/profile/${user.uid}`);
     } else {
       toast({
         variant: 'destructive',
@@ -89,6 +99,10 @@ export default function EditProfilePage({ params }: { params: {lng: string}}) {
                     <Skeleton className="h-4 w-64 mt-2" />
                 </CardHeader>
                 <CardContent className="space-y-6">
+                     <div className="flex flex-col items-center space-y-4 mb-8">
+                        <Skeleton className="h-24 w-24 rounded-full" />
+                        <Skeleton className="h-4 w-32" />
+                    </div>
                     <div className="space-y-2">
                         <Skeleton className="h-4 w-24" />
                         <Skeleton className="h-10 w-full" />
@@ -121,6 +135,13 @@ export default function EditProfilePage({ params }: { params: {lng: string}}) {
           <CardDescription>Make changes to your public profile.</CardDescription>
         </CardHeader>
         <CardContent>
+            <div className="flex flex-col items-center space-y-4 mb-8">
+                <Avatar className="h-24 w-24">
+                  <AvatarImage src={profile?.photoURL} />
+                  <AvatarFallback>{profile?.displayName?.charAt(0).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <Button variant="link">Change Profile Photo</Button>
+            </div>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField

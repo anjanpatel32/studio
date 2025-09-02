@@ -4,7 +4,6 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/shared/theme-provider';
-import { dir } from 'i18next';
 import { PT_Sans, Space_Grotesk } from 'next/font/google';
 import { AnimatedBackground } from '@/components/shared/animated-background';
 
@@ -21,8 +20,8 @@ const spaceGrotesk = Space_Grotesk({
 
 
 export const metadata: Metadata = {
-  title: 'ZYREEL',
-  description: 'The ultimate social video platform.',
+  title: 'Student Toolkit',
+  description: 'The ultimate toolkit for students.',
 };
 
 export default function RootLayout({
@@ -36,7 +35,7 @@ export default function RootLayout({
 }>) {
   const { lng = 'en' } = params;
   return (
-    <html lang={lng} dir={dir(lng)} suppressHydrationWarning>
+    <html lang={lng} dir="ltr" suppressHydrationWarning>
       <head />
       <body
         className={cn(
