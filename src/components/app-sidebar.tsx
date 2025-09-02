@@ -32,7 +32,7 @@ import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useUserProfile } from '@/hooks/use-user-profile';
 import { useTranslation } from '@/app/i18n/client';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-is-mobile';
 import { cn } from '@/lib/utils';
 
 const menuItems = [
@@ -75,7 +75,7 @@ export default function AppSidebar({ lng }: { lng: string }) {
       return (
         <div className="flex justify-around items-center w-full h-16">
              {menuItems.map((item) => (
-                <Link href={`/${lng}${item.href}`} key={item.id} passHref>
+                <Link href={`/${lng}${item.href}`} key={item.id}>
                     <div className={cn("flex flex-col items-center gap-1 p-2 rounded-md", isActive(item.href) ? "text-primary" : "text-muted-foreground")}>
                         <item.icon className="h-6 w-6"/>
                         {/* <span className="text-xs">{t(item.label)}</span> */}
@@ -99,20 +99,21 @@ export default function AppSidebar({ lng }: { lng: string }) {
         <SidebarMenu>
           {[...menuItems, { id: 'messages', href: '/messages', icon: MessageCircle, label: 'messages', notificationCount: 5 }, { id: 'rewards', href: '/rewards', icon: Award, label: 'rewards' }].map((item) => (
             <SidebarMenuItem key={item.id}>
-              <Link href={`/${lng}${item.href}`} passHref legacyBehavior>
-                <SidebarMenuButton
-                  isActive={isActive(item.href)}
-                  tooltip={{
-                    children: t(item.label)
-                  }}
-                >
+              <SidebarMenuButton
+                asChild
+                isActive={isActive(item.href)}
+                tooltip={{
+                  children: t(item.label)
+                }}
+              >
+                <Link href={`/${lng}${item.href}`}>
                   <item.icon />
                   <span>{t(item.label)}</span>
                   {item.notificationCount && (
                     <SidebarMenuBadge>{item.notificationCount}</SidebarMenuBadge>
                   )}
-                </SidebarMenuButton>
-              </Link>
+                </Link>
+              </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
@@ -122,12 +123,12 @@ export default function AppSidebar({ lng }: { lng: string }) {
         <SidebarSeparator />
          <SidebarMenu>
            <SidebarMenuItem>
-              <Link href={`/${lng}/settings`} passHref legacyBehavior>
-                 <SidebarMenuButton isActive={pathname.startsWith(`/${lng}/settings`)} tooltip={{ children: t('settings') }}>
-                    <Settings />
-                    <span>{t('settings')}</span>
-                </SidebarMenuButton>
-              </Link>
+              <SidebarMenuButton asChild isActive={pathname.startsWith(`/${lng}/settings`)} tooltip={{ children: t('settings') }}>
+                <Link href={`/${lng}/settings`}>
+                  <Settings />
+                  <span>{t('settings')}</span>
+                </Link>
+              </SidebarMenuButton>
            </SidebarMenuItem>
            {user && (
              <SidebarMenuItem>

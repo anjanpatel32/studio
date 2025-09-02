@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -48,15 +49,13 @@ const SettingsItem = ({ icon, title, description, children }: { icon: React.Reac
 );
 
 const SettingsLinkItem = ({ icon, title, description, href }: { icon: React.ReactNode; title: string; description: string; href: string }) => (
-    <Link href={href} passHref>
-      <div className="w-full flex items-center p-4 rounded-lg hover:bg-muted/50 transition-colors text-left cursor-pointer">
-            <div className="mr-4 text-muted-foreground">{icon}</div>
-            <div className="flex-1">
-            <p className="font-semibold">{title}</p>
-            <p className="text-sm text-muted-foreground">{description}</p>
-            </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-      </div>
+    <Link href={href} className="w-full flex items-center p-4 rounded-lg hover:bg-muted/50 transition-colors text-left cursor-pointer">
+        <div className="mr-4 text-muted-foreground">{icon}</div>
+        <div className="flex-1">
+        <p className="font-semibold">{title}</p>
+        <p className="text-sm text-muted-foreground">{description}</p>
+        </div>
+        <ChevronRight className="h-5 w-5 text-muted-foreground" />
     </Link>
 )
 
