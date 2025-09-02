@@ -81,13 +81,7 @@ export async function addComment(reelId: string, userId: string, commentText: st
     });
     
     // Here you would trigger notifications for the users in taggedUids
-    // For now, we'll just log it.
-    if(taggedUids.length > 0) {
-      console.log(`Users tagged in comment: ${taggedUids.join(', ')}`);
-      // This is where a Cloud Function could be triggered to send notifications.
-    }
-
-
+    
     revalidatePath('/');
     return { success: true };
   } catch (error) {

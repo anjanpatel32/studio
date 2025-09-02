@@ -11,11 +11,18 @@ import { DebugCodeInputSchema, DebugCodeOutputSchema, type DebugCodeInput, type 
 
 
 export async function debugCode(input: DebugCodeInput): Promise<DebugCodeOutput> {
-    const prompt = ai.definePrompt({
-      name: 'debugCodePrompt',
-      input: {schema: DebugCodeInputSchema},
-      output: {schema: DebugCodeOutputSchema},
-      prompt: `You are an expert programmer and debugger. A user has provided a piece of code in {{language}} that produced an error.
+    const debugCodeFlow = ai.defineFlow(
+      {
+        name: 'debugCodeFlow',
+        inputSchema: DebugCodeInputSchema,
+        outputSchema: DebugCodeOutputSchema,
+      },
+      async (input) => {
+        const prompt = ai.definePrompt({
+          name: 'debugCodePrompt',
+          input: {schema: DebugCodeInputSchema},
+          output: {schema: DebugCodeOutputSchema},
+          prompt: `You are an expert programmer and debugger. A user has provided a piece of code in {{language}} that produced an error.
 
 Your task is to:
 1.  Analyze the code and the error message.
@@ -26,14 +33,17 @@ Error Message:
 {{error}}
 
 Code with Error:
-\`\`\`{{language}}
+\'\'\'{{language}}
 {{code}}
-\`\`\`
+\'\'\'
 
 Return only the explanation and the fixed code in the specified output format.
 `,
-    });
+        });
 
-    const {output} = await prompt(input);
-    return output!;
+        const {output} = await prompt(input);
+        return output!;
+      }
+    );
+    return await debugCodeFlow(input);
 }

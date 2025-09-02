@@ -1,10 +1,11 @@
 
 'use server';
 
-import { moderateContent, type ModerateContentInput } from '@/ai/flows/moderate-content';
+import { moderateContent } from '@/ai/flows/moderate-content';
 import { getFirestoreAdmin } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
 import * as admin from 'firebase-admin';
+import type { ModerateContentInput } from '@/lib/types';
 
 const extractHashtags = (text: string): string[] => {
     if (!text) return [];
@@ -24,12 +25,17 @@ interface HandleReelUploadInput {
 interface HandleReelUploadResult {
   success: boolean;
   error?: string;
+  isComplete: boolean;
+  finalResult?: {
+    success: boolean;
+    error?: string;
+  };
 }
 
 // Store for chunks in memory. In a scalable production app, use a distributed cache like Redis.
 const chunkStore = new Map<string, Buffer[]>();
 
-export async function uploadChunk(formData: FormData) {
+export async function uploadChunk(formData: FormData): Promise<HandleReelUploadResult> {
     const chunk = formData.get('chunk') as File;
     const chunkIndex = Number(formData.get('chunkIndex'));
     const totalChunks = Number(formData.get('totalChunks'));
@@ -38,7 +44,7 @@ export async function uploadChunk(formData: FormData) {
     const ownerUid = formData.get('ownerUid') as string;
 
     if (!chunk || isNaN(chunkIndex) || isNaN(totalChunks) || !fileId || !description || !ownerUid) {
-        return { success: false, error: 'Invalid upload data' };
+        return { success: false, error: 'Invalid upload data', isComplete: false };
     }
 
     try {
@@ -61,29 +67,31 @@ export async function uploadChunk(formData: FormData) {
             chunkStore.delete(fileId);
 
             // Directly call the processing function now that we have the full file in memory
-            return await handleReelUpload({
+            const finalResult = await handleReelUpload({
                 ownerUid,
                 description,
                 reelDataUri,
             });
+            return { success: true, isComplete: true, finalResult };
         }
         
         return { success: true, isComplete: false };
     } catch (error: any) {
         console.error('Error handling chunk upload:', error);
         chunkStore.delete(fileId); // Clean up on error
-        return { success: false, error: error.message || 'Failed to process chunk' };
+        return { success: false, error: error.message || 'Failed to process chunk', isComplete: false };
     }
 }
 
 
-export async function handleReelUpload(input: HandleReelUploadInput): Promise<HandleReelUploadResult> {
+export async function handleReelUpload(input: ModerateContentInput) {
   const firestoreAdmin = getFirestoreAdmin();
+  const { ownerUid, description, reelDataUri } = input as any;
   try {
     // 1. Moderate content
     const moderationResult = await moderateContent({
-        reelDataUri: input.reelDataUri,
-        description: input.description
+        reelDataUri: reelDataUri,
+        description: description
     });
 
     if (!moderationResult.isCompliant) {
@@ -97,15 +105,15 @@ export async function handleReelUpload(input: HandleReelUploadInput): Promise<Ha
     // In a real app, you'd upload the video to Firebase Storage and get a URL.
     // For this prototype, we'll use a placeholder.
     
-    const hashtags = extractHashtags(input.description);
+    const hashtags = extractHashtags(description);
     const newReelRef = firestoreAdmin.collection('reels').doc();
     
     await newReelRef.set({
         reelId: newReelRef.id,
-        ownerUid: input.ownerUid,
+        ownerUid: ownerUid,
         videoUrl: 'https://placehold.co/400x700.png', // Placeholder URL
         thumbnailUrl: 'https://placehold.co/400x700.png', // Placeholder URL
-        caption: input.description,
+        caption: description,
         hashtags,
         likesCount: 0,
         commentsCount: 0,

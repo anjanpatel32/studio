@@ -18,6 +18,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useUserProfile } from '@/hooks/use-user-profile';
 import { updateProfile } from './actions';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const formSchema = z.object({
   displayName: z
@@ -122,6 +123,13 @@ export default function EditProfilePage() {
           <CardDescription>Make changes to your public profile.</CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="flex flex-col items-center space-y-4 mb-8">
+            <Avatar className="h-24 w-24">
+              <AvatarImage src={profile?.photoURL} />
+              <AvatarFallback>{profile?.displayName?.charAt(0).toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <Button variant="link">Change Profile Photo</Button>
+          </div>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField

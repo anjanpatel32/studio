@@ -9,11 +9,18 @@ import {ai} from '@/ai/genkit';
 import { ModerateContentInputSchema, ModerateContentOutputSchema, type ModerateContentInput, type ModerateContentOutput } from '@/lib/types';
 
 export async function moderateContent(input: ModerateContentInput): Promise<ModerateContentOutput> {
-    const prompt = ai.definePrompt({
-      name: 'moderateContentPrompt',
-      input: {schema: ModerateContentInputSchema},
-      output: {schema: ModerateContentOutputSchema},
-      prompt: `You are a content moderator for a social media platform. Your task is to review a video reel and its description to determine if it complies with the community guidelines.
+    const moderateContentFlow = ai.defineFlow(
+        {
+            name: 'moderateContentFlow',
+            inputSchema: ModerateContentInputSchema,
+            outputSchema: ModerateContentOutputSchema,
+        },
+        async (input) => {
+            const prompt = ai.definePrompt({
+                name: 'moderateContentPrompt',
+                input: {schema: ModerateContentInputSchema},
+                output: {schema: ModerateContentOutputSchema},
+                prompt: `You are a content moderator for a social media platform. Your task is to review a video reel and its description to determine if it complies with the community guidelines.
 
 Guidelines:
 - No hate speech or promotion of violence.
@@ -28,8 +35,11 @@ Analyze the provided video and description.
 
 Description: {{{description}}}
 Video Reel: {{media url=reelDataUri}}`,
-    });
+            });
+            const {output} = await prompt(input);
+            return output!;
+        }
+    );
 
-    const {output} = await prompt(input);
-    return output!;
+    return await moderateContentFlow(input);
 }
