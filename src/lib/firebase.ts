@@ -1,3 +1,4 @@
+
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
@@ -9,10 +10,17 @@ const firebaseConfig = {
   "apiKey": "AIzaSyDvWu67Stbw2O6Onpy1aFv5Nd7Flg7U9mQ",
   "authDomain": "student-toolkit-s36f8.firebaseapp.com",
   "measurementId": "",
-  "messagingSenderId": "1057582139502"
+  "messagingSenderId": "1057582139502",
+  "databaseURL": "https://student-toolkit-s36f8.firebaseio.com"
 };
 
 // Initialize Firebase
-export const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-export const auth = getAuth(app);
-export const firestore = getFirestore(app);
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const auth = getAuth(app);
+const firestore = getFirestore(app);
+
+function getFirebaseConfig() {
+    return firebaseConfig;
+}
+
+export { app, auth, firestore, getFirebaseConfig };

@@ -1,7 +1,9 @@
+
 import * as admin from 'firebase-admin';
+import { getFirebaseConfig } from './firebase';
 
 if (!admin.apps.length) {
-  admin.initializeApp();
+  admin.initializeApp(getFirebaseConfig());
 }
 
 const firestoreAdmin = admin.firestore();
