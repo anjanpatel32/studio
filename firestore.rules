@@ -1,92 +1,118 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
   
-    // Default deny all
+    // Default deny all reads and writes
     match /{document=**} {
       allow read, write: if false;
     }
-
-    // Users: Publicly readable, but only the user can write to their own document.
+    
+    // Users:
+    // - Anyone can read public profiles.
+    // - Authenticated users can create their own profile.
+    // - Users can only update their own profile.
     match /users/{userId} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId;
+      
+      // Subcollections
+      match /following/{targetId} {
+        allow read: if true;
+        allow write: if request.auth != null && request.auth.uid == userId;
+      }
+       match /followers/{followerId} {
+        allow read: if true;
+        allow write: if request.auth != null; // Allow server-side updates
+      }
+       match /likedReels/{reelId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if request.auth != null && request.auth.uid == userId;
+      }
+      match /notifications/{notificationId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
     }
     
-    // Subcollections of users (following, followers, likedReels, notifications)
-    // are private to the user.
-    match /users/{userId}/{collection}/{docId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+    // Reels, Posts, Stories
+    // - Public content is readable by anyone.
+    // - Users can create content.
+    // - Users can only update/delete their own content.
+    function isOwner(ownerId) {
+      return request.auth != null && request.auth.uid == ownerId;
     }
-
-    // Reels: Public reels are readable by anyone. Users can only write to their own reels.
-    // Liking/commenting is handled by subcollections.
+    
     match /reels/{reelId} {
-      allow read: if resource.data.visibility == 'public' || (request.auth != null && request.auth.uid == resource.data.ownerUid);
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.ownerUid;
-      allow update, delete: if request.auth != null && request.auth.uid == resource.data.ownerUid;
-    }
-    
-    // Reel subcollections (likes, comments): Logged-in users can interact.
-    match /reels/{reelId}/{collection}/{userId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-
-    // Posts: Similar to reels. Publicly readable.
-    match /posts/{postId} {
+      allow read: if resource.data.visibility == 'public';
+      allow create: if isOwner(request.resource.data.ownerUid);
+      allow update, delete: if isOwner(resource.data.ownerUid);
+      
+      match /likes/{userId} {
         allow read: if true;
-        allow create: if request.auth != null && request.auth.uid == request.resource.data.ownerUid;
-        allow update, delete: if request.auth != null && request.auth.uid == resource.data.ownerUid;
-    }
-    
-    // Post subcollections (likes, comments): Logged-in users can interact.
-    match /posts/{postId}/{collection}/{userId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-
-    // Stories: Only the owner and their followers can read. Only owner can write.
-    // This rule assumes a 'followers' subcollection on the user doc.
-    // For simplicity here, we allow any logged-in user to see stories from people they follow.
-    match /stories/{storyId} {
-      allow read: if request.auth != null && (
-                  request.auth.uid == resource.data.ownerUid || 
-                  exists(/databases/$(database)/documents/users/$(request.auth.uid)/following/$(resource.data.ownerUid))
-                  );
-      allow create, update, delete: if request.auth != null && request.auth.uid == resource.data.ownerUid;
-    }
-
-    // Chats: Only members of the chat can read or write messages.
-    match /chats/{chatId} {
-      allow read, update: if request.auth != null && request.auth.uid in resource.data.members;
-    }
-    match /chats/{chatId}/messages/{messageId} {
-       allow read, create: if request.auth != null && exists(/databases/$(database)/documents/chats/$(chatId)) && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.members;
-    }
-    
-    // Live Streams: Readable by all, writable only by owner.
-    match /live-streams/{streamId} {
-        allow read: if true;
-        allow create, update: if request.auth != null && request.auth.uid == request.resource.data.ownerUid;
-    }
-    
-    // Live stream chat: Writable by any logged-in user.
-     match /live-streams/{streamId}/chat/{messageId} {
+        allow write: if isOwner(userId);
+      }
+      
+      match /comments/{commentId} {
         allow read: if true;
         allow create: if request.auth != null;
-    }
-
-    // Wallets and transactions are private.
-    match /wallets/{userId}/{document=**} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        allow update, delete: if isOwner(resource.data.uid);
+      }
     }
     
-    // Payouts can be created by users, but only read/updated by admins (not enforced here, needs backend logic).
+    match /posts/{postId} {
+      allow read: if resource.data.visibility == 'public';
+      allow create: if isOwner(request.resource.data.ownerUid);
+      allow update, delete: if isOwner(resource.data.ownerUid);
+    }
+    
+    match /stories/{storyId} {
+      // Allow read if the story has not expired and the viewer is the owner or a follower.
+      // This is a simplified rule; a real app would check a list of followers.
+      allow read: if resource.data.expiresAt > request.time && (isOwner(resource.data.ownerUid) || request.auth != null);
+      allow create: if isOwner(request.resource.data.ownerUid);
+      allow delete: if isOwner(resource.data.ownerUid);
+    }
+    
+    // Live Streams
+    match /live-streams/{streamId} {
+      allow read: if true;
+      allow create, update: if isOwner(request.resource.data.ownerUid) || isOwner(resource.data.ownerUid);
+      
+      match /chat/{messageId} {
+        allow read: if true;
+        allow create: if request.auth != null;
+      }
+    }
+    
+    // Chats
+    // Users can only read/write chats they are a member of.
+    match /chats/{chatId} {
+      allow read, write: if request.auth != null && request.auth.uid in resource.data.members;
+      
+      match /messages/{messageId} {
+        allow read, write: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.members;
+      }
+    }
+    
+    // Wallets & Payouts (Highly restricted)
+    // - Users can only read their own wallet.
+    // - Server-side logic should be the only thing writing to wallets/payouts.
+    match /wallets/{userId} {
+      allow read: if isOwner(userId);
+      allow write: if false; // All updates should be through trusted server actions
+      
+      match /transactions/{transactionId} {
+        allow read: if isOwner(userId);
+        allow write: if false; // All updates should be through trusted server actions
+      }
+    }
+    
+    // Payouts are admin-only, except for creation by the user.
     match /payouts/{payoutId} {
-        allow create: if request.auth != null && request.auth.uid == request.resource.data.uid;
-        // Read/update should be restricted to admin roles via backend logic, not client rules.
-        allow read, update, delete: if false; 
+        allow read: if isOwner(resource.data.uid);
+        allow create: if isOwner(request.resource.data.uid);
+        allow update: if false; // Admins only via backend
     }
   }
 }
