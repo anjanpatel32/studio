@@ -66,7 +66,7 @@ export default function SettingsPage({ params }: { params: { lng: string }}) {
     const router = useRouter();
     const { setTheme, theme } = useTheme();
     const { user } = useAuth();
-    const { t } = useTranslation(lng);
+    const { t } = useTranslation(lng, 'translation');
 
 
     const placeholderClick = (feature: string) => {

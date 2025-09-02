@@ -27,7 +27,7 @@ export default function UserProfilePage() {
   const userId = params.userId as string;
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  const { t } = useTranslation(lng);
+  const { t } = useTranslation(lng, 'translation');
   
   const { profile, loading: profileLoading } = useUserProfile(userId);
   const { isFollowing, loading: followLoading } = useFollowStatus(user?.uid, userId);
