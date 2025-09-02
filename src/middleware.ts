@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -34,6 +35,17 @@ export function middleware(request: NextRequest) {
       )
     )
   }
+
+  // Add the x-next-intl-locale header
+  const locale = languages.find(l => pathname.startsWith(`/${l}/`) || pathname === `/${l}`) || fallbackLng;
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-next-intl-locale', locale);
+
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 }
 
 export const config = {

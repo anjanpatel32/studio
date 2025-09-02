@@ -4,12 +4,25 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/shared/theme-provider';
-import Script from 'next/script';
 import { dir } from 'i18next';
+import { PT_Sans, Space_Grotesk } from 'next/font/google';
+import { AnimatedBackground } from '@/components/shared/animated-background';
+
+const ptSans = PT_Sans({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  variable: '--font-pt-sans',
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-space-grotesk',
+});
+
 
 export const metadata: Metadata = {
-  title: 'ZYREEL',
-  description: 'The ultimate short video platform.',
+  title: 'Student Toolkit',
+  description: 'The ultimate toolkit for students.',
 };
 
 export default function RootLayout({
@@ -24,24 +37,12 @@ export default function RootLayout({
   const { lng = 'en' } = params;
   return (
     <html lang={lng} dir={dir(lng)} suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap"
-          rel="stylesheet"
-        />
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
-      </head>
+      <head />
       <body
         className={cn(
-          'font-body antialiased min-h-screen bg-background',
-          'dark:bg-gradient-to-br dark:from-background dark:to-zinc-900'
+          'font-body antialiased',
+          ptSans.variable,
+          spaceGrotesk.variable
         )}
       >
         <ThemeProvider
@@ -50,7 +51,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <AnimatedBackground />
+          <div className="relative z-10">
+            {children}
+          </div>
           <Toaster />
         </ThemeProvider>
       </body>
