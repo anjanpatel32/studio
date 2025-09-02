@@ -67,9 +67,9 @@ service cloud.firestore {
     }
     
     match /stories/{storyId} {
-      // Allow read if the story has not expired and the viewer is the owner or a follower.
-      // This is a simplified rule; a real app would check a list of followers.
-      allow read: if resource.data.expiresAt > request.time && (isOwner(resource.data.ownerUid) || request.auth != null);
+      // Allow read if the story has not expired and the viewer is authenticated.
+      // This allows the feed to load stories from followed users.
+      allow read: if request.auth != null && resource.data.expiresAt > request.time;
       allow create: if isOwner(request.resource.data.ownerUid);
       allow delete: if isOwner(resource.data.ownerUid);
     }
