@@ -4,7 +4,7 @@ export const languages = [fallbackLng, 'es', 'hi']
 export const defaultNS = 'translation'
 export const cookieName = 'i18next'
 
-export function getOptions (lng = fallbackLng, ns = defaultNS) {
+export function getOptions (lng = fallbackLng, ns: string | string[] = defaultNS) {
   return {
     // debug: true,
     supportedLngs: languages,

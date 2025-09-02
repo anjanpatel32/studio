@@ -15,6 +15,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { uploadChunk } from '@/app/upload/actions';
+import { cn } from '@/lib/utils';
 
 const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
 
