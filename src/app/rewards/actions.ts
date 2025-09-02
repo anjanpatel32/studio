@@ -1,72 +1,68 @@
-
 'use server';
 
-import * as admin from 'firebase-admin';
 import { getFirestoreAdmin } from '@/lib/firebase-admin';
+import * as admin from 'firebase-admin';
 
 const AD_REWARD_COINS = 10;
-const AD_WATCH_LIMIT = 100; // Max ads per day
+const MAX_AD_WATCHES_PER_DAY = 100;
 
+/**
+ * Awards coins to a user for watching a simulated ad.
+ * Includes logic to prevent abuse by checking daily limits.
+ * @param uid The user ID to award the coins to.
+ * @returns An object indicating success, error, or coins awarded.
+ */
 export async function awardAdReward(uid: string) {
-    const firestoreAdmin = getFirestoreAdmin();
-    const userRef = firestoreAdmin.doc(`users/${uid}`);
-    const walletRef = firestoreAdmin.doc(`wallets/${uid}`);
-    
-    try {
-        const { coinsAwarded } = await firestoreAdmin.runTransaction(async (transaction) => {
-            const walletDoc = await transaction.get(walletRef);
-            if (!walletDoc.exists) {
-                throw new Error('Wallet not found for user.');
-            }
+  const firestoreAdmin = getFirestoreAdmin();
+  const walletRef = firestoreAdmin.doc(`wallets/${uid}`);
+  const userRef = firestoreAdmin.doc(`users/${uid}`);
 
-            const walletData = walletDoc.data()!;
-            const today = new Date().toISOString().slice(0, 10);
-            let dailyStats = walletData.dailyStats;
+  try {
+    const result = await firestoreAdmin.runTransaction(async (transaction) => {
+      const walletDoc = await transaction.get(walletRef);
+      if (!walletDoc.exists) {
+        throw new Error('Wallet not found for this user.');
+      }
+      
+      const walletData = walletDoc.data()!;
+      const today = new Date().toISOString().slice(0, 10);
 
-            // Reset daily stats if it's a new day
-            if (dailyStats.date !== today) {
-                dailyStats = {
-                    date: today,
-                    watchedCount: 0,
-                    uploadedCount: 0,
-                    sharedCount: 0,
-                };
-            }
-            
-            // Check daily limit for watching ads
-            if (dailyStats.watchedCount >= AD_WATCH_LIMIT) {
-                throw new Error('You have reached your daily limit for watching ads.');
-            }
+      // Initialize daily stats if they don't exist or if the date has changed
+      let dailyStats = walletData.dailyStats;
+      if (!dailyStats || dailyStats.date !== today) {
+        dailyStats = { date: today, watchedCount: 0, uploadedCount: 0, sharedCount: 0 };
+      }
 
-            // Increment the watched count for today
-            dailyStats.watchedCount += 1;
-            
-            // Update balances and stats
-            transaction.update(walletRef, { 
-                balance: admin.firestore.FieldValue.increment(AD_REWARD_COINS),
-                dailyStats: dailyStats,
-            });
-            transaction.update(userRef, { coins: admin.firestore.FieldValue.increment(AD_REWARD_COINS) });
+      if (dailyStats.watchedCount >= MAX_AD_WATCHES_PER_DAY) {
+        return { success: false, error: 'Daily limit for watching ads reached.' };
+      }
 
-            // Create transaction log
-            const transactionRef = walletRef.collection('transactions').doc();
-            transaction.set(transactionRef, {
-                kind: 'earn',
-                reason: 'ad_watch',
-                coins: AD_REWARD_COINS,
-                status: 'success',
-                createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            });
+      // Increment counts and balances
+      const newWatchedCount = dailyStats.watchedCount + 1;
+      transaction.update(walletRef, {
+        balance: admin.firestore.FieldValue.increment(AD_REWARD_COINS),
+        'dailyStats.watchedCount': newWatchedCount,
+        'dailyStats.date': today,
+      });
+      transaction.update(userRef, { coins: admin.firestore.FieldValue.increment(AD_REWARD_COINS) });
+      
+      // Create a transaction log
+      const transactionRef = walletRef.collection('transactions').doc();
+      transaction.set(transactionRef, {
+        kind: 'earn',
+        reason: 'ad_watch',
+        coins: AD_REWARD_COINS,
+        status: 'success',
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      });
 
-            return { coinsAwarded: AD_REWARD_COINS };
-        });
-        
-        return { success: true, coinsAwarded };
+      return { success: true, coinsAwarded: AD_REWARD_COINS };
+    });
 
-    } catch (error: any) {
-        console.error('Error awarding ad reward:', error);
-        return { success: false, error: error.message };
-    }
+    return result;
+
+  } catch (error: any) {
+    console.error('Error awarding ad reward:', error);
+    return { success: false, error: error.message };
+  }
 }
-
-    

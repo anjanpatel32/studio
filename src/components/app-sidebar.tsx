@@ -32,7 +32,7 @@ import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useUserProfile } from '@/hooks/use-user-profile';
 import { useTranslation } from '@/app/i18n/client';
-import { useIsMobile } from '@/hooks/use-is-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
 const menuItems = [
@@ -64,12 +64,13 @@ export default function AppSidebar({ lng }: { lng: string }) {
   };
 
   const isActive = (href: string) => {
+    const currentPath = pathname.substring(`/${lng}`.length) || '/';
     if (href === '/') {
-        const currentPath = pathname.substring(pathname.indexOf('/', 1));
-        return currentPath === `/${lng}` || currentPath === '/';
+        return currentPath === href;
     }
-    return pathname.startsWith(`/${lng}${href}`);
+    return currentPath.startsWith(href);
   };
+
 
   if (isMobile) {
       return (
@@ -91,7 +92,7 @@ export default function AppSidebar({ lng }: { lng: string }) {
       <SidebarHeader>
         <div className="flex items-center gap-2">
             <Bot className="w-8 h-8 text-primary" />
-            <h1 className="text-xl font-bold group-data-[collapsible=icon]:hidden">ZYREEL</h1>
+            <h1 className="text-xl font-bold group-data-[collapsible=icon]:hidden">Student Toolkit</h1>
         </div>
       </SidebarHeader>
 

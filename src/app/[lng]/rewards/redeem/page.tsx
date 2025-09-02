@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -16,7 +15,7 @@ import { Loader2, ArrowLeft, Coins, IndianRupee } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { useUserProfile } from '@/hooks/use-user-profile';
-import { requestRedeem } from './actions';
+import { requestRedeem } from '@/app/rewards/redeem/actions';
 
 const PAYOUT_MIN_COINS = 100;
 const COINS_PER_INR = 100;

@@ -1,8 +1,8 @@
 
 'use client'
 
-import { useEffect } from 'react'
-import i18next from 'i18next'
+import { useEffect, useState } from 'react'
+import i18next, { i18n } from 'i18next'
 import { initReactI18next, useTranslation as useTranslationOrg } from 'react-i18next'
 import { useCookies } from 'react-cookie'
 import resourcesToBackend from 'i18next-resources-to-backend'

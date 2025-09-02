@@ -16,7 +16,7 @@ import { Loader2, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { useUserProfile } from '@/hooks/use-user-profile';
-import { updateProfile } from './actions';
+import { updateProfile } from '@/app/profile/edit/actions';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const formSchema = z.object({

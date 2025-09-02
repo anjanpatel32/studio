@@ -27,6 +27,9 @@ if (typeof window !== 'undefined') {
 
 
 function getFirebaseConfig() {
+    if (!firebaseConfig.apiKey) {
+        throw new Error('Missing Firebase API Key');
+    }
     return firebaseConfig;
 }
 

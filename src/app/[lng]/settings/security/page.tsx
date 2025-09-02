@@ -23,7 +23,6 @@ import {
   PhoneAuthProvider,
   PhoneMultiFactorGenerator,
   multiFactor,
-  updatePassword as firebaseUpdatePassword,
   reauthenticateWithCredential,
   EmailAuthProvider,
 } from 'firebase/auth';
@@ -73,7 +72,7 @@ export default function SecurityPage({ params }: { params: {lng: string}}) {
   
   useEffect(() => {
     // This is necessary for RecaptchaVerifier to work
-    if (typeof window !== 'undefined') {
+    if (mfaStep === 'enterPhone' && typeof window !== 'undefined' && !window.recaptchaVerifier) {
         window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
             'size': 'invisible',
             'callback': (response: any) => {
@@ -81,7 +80,7 @@ export default function SecurityPage({ params }: { params: {lng: string}}) {
             }
         });
     }
-  }, []);
+  }, [mfaStep]);
 
   const passwordForm = useForm<z.infer<typeof passwordFormSchema>>({
     resolver: zodResolver(passwordFormSchema),

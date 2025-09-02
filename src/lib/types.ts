@@ -1,4 +1,3 @@
-
 export interface UserProfile {
     uid: string;
     displayName: string;
@@ -130,4 +129,18 @@ export interface TaggedContent {
     thumbnailUrl: string;
     likesCount: number;
     commentsCount: number;
+}
+
+
+export interface Payout {
+    id: string;
+    uid: string;
+    upiId: string;
+    coinsRequested: number;
+    amountInr: number;
+    status: 'pending' | 'completed' | 'failed';
+    requestedAt: any; // Firestore Timestamp
+    processedAt?: any; // Firestore Timestamp
+    rejectionReason?: string;
+    user?: UserProfile; // populated on the client
 }
