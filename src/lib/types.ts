@@ -1,4 +1,6 @@
 
+import { z } from 'zod';
+
 export interface UserProfile {
     uid: string;
     displayName: string;
@@ -149,3 +151,48 @@ export interface Payout {
     rejectionReason?: string;
     user?: UserProfile; // populated on the client
 }
+
+
+// AI Flow Schemas
+
+export const DebugCodeInputSchema = z.object({
+  code: z.string().describe('The code that has an error.'),
+  language: z.string().describe('The programming language of the code.'),
+  error: z.string().describe('The error message produced by the code.'),
+});
+export type DebugCodeInput = z.infer<typeof DebugCodeInputSchema>;
+
+export const DebugCodeOutputSchema = z.object({
+  explanation: z.string().describe('An explanation of what the error is and why it occurred.'),
+  fixedCode: z.string().describe('The corrected version of the code.'),
+});
+export type DebugCodeOutput = z.infer<typeof DebugCodeOutputSchema>;
+
+
+export const ExecuteCodeInputSchema = z.object({
+  code: z.string().describe('The code to execute.'),
+  language: z.string().describe('The programming language of the code.'),
+});
+export type ExecuteCodeInput = z.infer<typeof ExecuteCodeInputSchema>;
+
+export const ExecuteCodeOutputSchema = z.object({
+  output: z.string().describe('The output of the code execution.'),
+});
+export type ExecuteCodeOutput = z.infer<typeof ExecuteCodeOutputSchema>;
+
+
+export const ModerateContentInputSchema = z.object({
+  reelDataUri: z
+    .string()
+    .describe(
+      "The video reel, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+    ),
+  description: z.string().describe('The description or caption of the reel.'),
+});
+export type ModerateContentInput = z.infer<typeof ModerateContentInputSchema>;
+
+export const ModerateContentOutputSchema = z.object({
+    isCompliant: z.boolean().describe('Whether or not the content is compliant with the guidelines.'),
+    reason: z.string().describe('The reason for non-compliance. Provide a detailed explanation.'),
+});
+export type ModerateContentOutput = z.infer<typeof ModerateContentOutputSchema>;
