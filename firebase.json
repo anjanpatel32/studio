@@ -1,3 +1,4 @@
+
 {
   "hosting": {
     "source": ".",
@@ -8,7 +9,11 @@
     ],
     "frameworksBackend": {
       "region": "us-central1"
-    }
+    },
+    "predeploy": [
+      "npm ci --prefix \"$RESOURCE_DIR\"",
+      "npm run build --prefix \"$RESOURCE_DIR\""
+    ]
   },
   "firestore": {
     "rules": "firestore.rules",
