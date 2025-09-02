@@ -20,7 +20,14 @@ function getLocale(request: NextRequest): string | undefined {
 }
 
 export function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname
+  let pathname = request.nextUrl.pathname
+
+  // If the root path is requested, treat it as a special case for the welcome page
+  if (pathname === '/') {
+    const locale = getLocale(request)
+    return NextResponse.redirect(new URL(`/${locale}`, request.url));
+  }
+  
   const pathnameIsMissingLocale = languages.every(
     locale => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`
   )

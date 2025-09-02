@@ -1,3 +1,4 @@
+
 export interface UserProfile {
     uid: string;
     displayName: string;
@@ -77,6 +78,10 @@ export interface Transaction {
     coins: number;
     status: 'success' | 'pending' | 'failed';
     createdAt: any; // Firestore Timestamp
+    meta?: {
+        payoutId?: string;
+        note?: string;
+    }
 }
 
 

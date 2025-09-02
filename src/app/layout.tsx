@@ -21,8 +21,8 @@ const spaceGrotesk = Space_Grotesk({
 
 
 export const metadata: Metadata = {
-  title: 'Student Toolkit',
-  description: 'The ultimate toolkit for students.',
+  title: 'ZYREEL',
+  description: 'The ultimate social video platform.',
 };
 
 export default function RootLayout({

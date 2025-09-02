@@ -36,7 +36,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
 const menuItems = [
-  { id: 'home', href: '/', icon: Home, label: 'home' },
+  { id: 'home', href: '/home', icon: Home, label: 'home' },
   { id: 'explore', href: '/explore', icon: Compass, label: 'explore' },
   { id: 'create', href: '/upload', icon: PlusSquare, label: 'create' },
   { id: 'notifications', href: '/notifications', icon: Heart, label: 'notifications', notificationCount: 10 },
@@ -65,8 +65,8 @@ export default function AppSidebar({ lng }: { lng: string }) {
 
   const isActive = (href: string) => {
     const currentPath = pathname.substring(`/${lng}`.length) || '/';
-    if (href === '/') {
-        return currentPath === href;
+    if (href === '/home') {
+        return currentPath === href || currentPath === '/';
     }
     return currentPath.startsWith(href);
   };
@@ -92,7 +92,7 @@ export default function AppSidebar({ lng }: { lng: string }) {
       <SidebarHeader>
         <div className="flex items-center gap-2">
             <Bot className="w-8 h-8 text-primary" />
-            <h1 className="text-xl font-bold group-data-[collapsible=icon]:hidden">Student Toolkit</h1>
+            <h1 className="text-xl font-bold group-data-[collapsible=icon]:hidden font-headline">ZYREEL</h1>
         </div>
       </SidebarHeader>
 
