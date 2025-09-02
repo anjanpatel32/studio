@@ -6,7 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/header';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/app-sidebar';
-import { ThemeProvider } from '@/components/theme-provider';
+import { ThemeProvider } from '@/components/shared/theme-provider';
 import Script from 'next/script';
 import { dir } from 'i18next';
 import { languages } from '../i18n/settings';
